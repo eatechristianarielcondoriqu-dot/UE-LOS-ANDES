@@ -1,0 +1,372 @@
+/* ============================================================================
+   GESTIÓN DE HORARIOS - Estilos CSS
+   ============================================================================ */
+
+:root {
+    --director-blue: #1e3a8a;
+    --director-light: #3b82f6;
+    --bg-main: #f8fafc;
+    --text-dark: #0f172a;
+}
+
+body {
+    background-color: var(--bg-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.crud-container {
+    padding: 35px 25px;
+}
+
+.crud-header h1 {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 2.1rem;
+}
+
+.crud-header p {
+    font-size: 1rem;
+    color: #64748b;
+}
+
+/* ============================================================================
+   TARJETAS DE ESTADÍSTICAS
+   ============================================================================ */
+
+.ref-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ref-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+}
+
+.ref-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    display: block;
+}
+
+.ref-value {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-top: 4px;
+}
+
+.ref-subtext {
+    font-size: 0.82rem;
+    color: #475569;
+    margin-top: 8px;
+}
+
+/* ============================================================================
+   CAJA DE BÚSQUEDA Y FILTROS
+   ============================================================================ */
+
+.search-box-card {
+    border: none;
+    border-radius: 12px;
+    background: white;
+}
+
+.btn-search {
+    background-color: var(--director-blue);
+    color: white;
+    border-color: var(--director-blue);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-search:hover {
+    background-color: var(--director-light);
+    border-color: var(--director-light);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* ============================================================================
+   TABLA PRINCIPAL
+   ============================================================================ */
+
+.data-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    background: white;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background-color: #f1f5f9;
+}
+
+.table th {
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 15px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* ============================================================================
+   AVATARES E INICIALES
+   ============================================================================ */
+
+.avatar-initials {
+    width: 40px;
+    height: 40px;
+    background-color: #eff6ff;
+    color: var(--director-blue);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+}
+
+/* ============================================================================
+   BADGES Y CÓDIGOS
+   ============================================================================ */
+
+.time-code {
+    background-color: #f1f5f9;
+    color: #0369a1;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* ============================================================================
+   BOTONES DE ACCIÓN
+   ============================================================================ */
+
+.btn-action {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: transform 0.15s, background-color 0.2s;
+    cursor: pointer;
+}
+
+.btn-action:hover {
+    transform: scale(1.06);
+}
+
+.btn-edit {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.btn-edit:hover {
+    background-color: #0284c7;
+    color: white;
+}
+
+.btn-hard-delete {
+    background-color: #ffebe9;
+    color: #ef4444;
+}
+
+.btn-hard-delete:hover {
+    background-color: #dc2626;
+    color: white;
+}
+
+/* ============================================================================
+   BOTÓN PRINCIPAL DE CREAR
+   ============================================================================ */
+
+.btn-add-horario {
+    background-color: var(--director-blue);
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-add-horario:hover {
+    background-color: var(--director-light);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(30, 58, 138, 0.25);
+}
+
+/* ============================================================================
+   MODALES
+   ============================================================================ */
+
+.modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background-color: var(--director-blue);
+    color: white;
+    border: none;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Estilos para inputs en modales */
+.modal-body .form-label {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--director-light);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .crud-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .btn-add-horario {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .ref-card {
+        margin-bottom: 15px;
+    }
+
+    .modal-dialog {
+        width: 95%;
+    }
+}
+
+@media (max-width: 576px) {
+    .crud-container {
+        padding: 20px 15px;
+    }
+
+    .crud-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
+
+    .table {
+        font-size: 0.75rem;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+}
+
+/* ============================================================================
+   ANIMACIONES Y TRANSICIONES
+   ============================================================================ */
+
+.alert {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.table tbody tr:hover {
+    animation: rowHover 0.2s ease-out;
+}
+
+@keyframes rowHover {
+    from {
+        background-color: white;
+    }
+    to {
+        background-color: #f8fafc;
+    }
+}
+
+/* ============================================================================
+   UTILIDADES
+   ============================================================================ */
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.text-muted {
+    color: #64748b !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}

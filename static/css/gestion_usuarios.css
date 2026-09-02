@@ -1,0 +1,138 @@
+:root {
+    --director-blue: #1e3a8a;
+    --director-light: #3b82f6;
+    --bg-main: #f8fafc;
+    --text-dark: #0f172a;
+}
+
+body {
+    background-color: var(--bg-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.crud-container {
+    padding: 35px 25px;
+}
+
+.crud-header h1 {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 2.1rem;
+}
+
+/* Tarjetas Informativas superiores (Referencias) */
+.ref-card {
+    background: white;
+    border-radius: 12px;
+    padding: 18px;
+}
+.ref-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 600;
+    display: block;
+}
+.ref-value {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-top: 4px;
+}
+.ref-subtext {
+    font-size: 0.82rem;
+    color: #475569;
+    margin-top: 8px;
+}
+
+/* Formulario de Búsqueda */
+.search-box-card {
+    border: none;
+    border-radius: 12px;
+}
+.btn-search {
+    background-color: var(--director-blue);
+    color: white;
+}
+.btn-search:hover {
+    background-color: var(--director-light);
+    color: white;
+}
+
+/* Estilo de la Tabla principal */
+.data-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+}
+.table thead {
+    background-color: #f1f5f9;
+}
+.table th { 
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 15px;
+}
+.table td {
+    padding: 14px 16px;
+}
+
+/* Píldoras de control de estados */
+.status-pill {
+    border: none;
+    border-radius: 30px;
+    padding: 4px 12px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+.badge-active { background-color: #dcfce7; color: #15803d; }
+.badge-active:hover { background-color: #bbf7d0; }
+.badge-inactive { background-color: #fee2e2; color: #b91c1c; }
+.badge-inactive:hover { background-color: #fecaca; }
+
+/* Botones de acción contextuales */
+.btn-action {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: transform 0.15s, background-color 0.2s;
+}
+.btn-action:hover { transform: scale(1.06); }
+.btn-edit { background-color: #e0f2fe; color: #0369a1; }
+.btn-edit:hover { background-color: #0284c7; color: white; }
+.btn-soft-delete { background-color: #fef3c7; color: #b45309; }
+.btn-soft-delete:hover { background-color: #d97706; color: white; }
+.btn-hard-delete { background-color: #ffebe9; color: #ef4444; }
+.btn-hard-delete:hover { background-color: #dc2626; color: white; }
+
+/* Avatares */
+.avatar-initials {
+    width: 40px;
+    height: 40px;
+    background-color: #eff6ff;
+    color: var(--director-blue);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+/* Badges de Roles */
+.role-badge { padding: 5px 12px; border-radius: 20px; font-weight: 600; font-size: 0.72rem; }
+.badge-director { background-color: #bbc7ec; color: #3730a3; }
+.badge-maestro { background-color: #d8b8f8; color: #6b21a8; }
+.badge-padre { background-color: #f9d9b2; color: #9a3412; }
+.badge-administrativo { background-color: #b0eeb0; color: #29a76c; }
+
+.username-code { background-color: #f1f5f9; color: #0f766e; padding: 4px 8px; border-radius: 6px; font-weight: 600; }
+.btn-add-user { background-color: var(--director-blue); color: white; font-weight: 600; padding: 10px 20px; border-radius: 8px; }
+.btn-add-user:hover { background-color: var(--director-light); color: white; }
+.modal-content { border: none; border-radius: 16px; overflow: hidden; }
+.modal-header { background-color: var(--director-blue); color: white; }

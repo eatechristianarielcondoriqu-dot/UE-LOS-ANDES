@@ -1,0 +1,106 @@
+:root {
+    --director-blue: #1e3a8a;
+    --director-light: #3b82f6;
+    --bg-main: #f8fafc;
+}
+
+body {
+    background: var(--bg-main);
+}
+
+.crud-container {
+    padding: 35px 25px;
+}
+
+.crud-header h1 {
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.ref-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.ref-label {
+    font-size: .85rem;
+    color: #64748b;
+}
+
+.ref-value {
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--director-blue);
+}
+
+.data-card {
+    border: none;
+    border-radius: 14px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-initials {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: #dbeafe;
+    color: var(--director-blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+.btn-add {
+    background: var(--director-blue);
+    color: white;
+    font-weight: 500;
+}
+
+.btn-add:hover {
+    background: var(--director-light);
+    color: white;
+}
+
+.table thead {
+    background-color: #f1f5f9;
+}
+
+.table th {
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 15px;
+}
+
+.btn-edit {
+    background: #dbeafe;
+    color: #1e40af;
+    border: none;
+    transition: background 0.2s;
+}
+
+.btn-edit:hover {
+    background: #bfdbfe;
+    color: #1e40af;
+}
+
+.btn-delete {
+    background: #fee2e2;
+    color: #dc2626;
+    border: none;
+    transition: background 0.2s;
+}
+
+.btn-delete:hover {
+    background: #fecaca;
+    color: #dc2626;
+}
+
+.modal-header {
+    background: var(--director-blue);
+    color: white;
+}

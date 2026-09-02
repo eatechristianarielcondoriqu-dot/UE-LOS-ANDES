@@ -1,0 +1,101 @@
+:root {
+    --director-blue: #1e3a8a;
+    --director-light: #3b82f6;
+    --bg-main: #f8fafc;
+    --text-muted: #64748b;
+    --border-canvas: #cbd5e1;
+}
+
+body {
+    background-color: var(--bg-main);
+}
+
+.crud-container {
+    padding: 35px 25px;
+}
+
+.crud-header h2 {
+    font-weight: 600;
+    color: var(--director-blue);
+}
+
+.data-card {
+    border: none;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+}
+
+.canvas-container {
+    display: inline-block;
+    background: #ffffff;
+    border: 2px dashed var(--border-canvas);
+    border-radius: 10px;
+    position: relative;
+}
+
+.canvas-pad {
+    display: block;
+    cursor: crosshair;
+    background-color: #ffffff;
+}
+
+.table thead {
+    background-color: #f1f5f9;
+}
+
+.table th {
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 15px;
+}
+
+.text-ia-match {
+    color: #4f46e5;
+    font-weight: 600;
+}
+
+.badge-approved {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.badge-rejected {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.lienzo-firma {
+    cursor: crosshair;
+    background-color: #ffffff;
+    background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+    background-size: 16px 16px;
+    border: 2px dashed #cbd5e1;
+    transition: all 0.2s ease;
+}
+
+.lienzo-firma:hover {
+    border-color: #3b82f6;
+}
+
+/* Contenedor Estilizado de Vista Previa de Fotos */
+.contenedor-foto-preview {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s ease;
+}
+
+.contenedor-foto-preview img {
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    transition: transform 0.2s;
+}
+
+.contenedor-foto-preview img:hover {
+    transform: scale(1.02);
+}

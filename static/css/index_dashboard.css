@@ -1,0 +1,98 @@
+/* Paleta de Colores Corporativa */
+:root {
+    --navy-dark: #0f172a;       /* Gris azulado muy oscuro (casi negro elegante) */
+    --navy-blue: #1e3a8a;       /* Azul marino corporativo */
+    --primary-blue: #2563eb;    /* Azul de enfoque técnico */
+    --bg-light: #f8f9fa;        /* Blanco grisáceo para fondo */
+    --text-dark: #1e293b;       /* Color del texto principal */
+    --text-muted: #64748b;     /* Gris para subtítulos pasivos */
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Navbar */
+.bg-dark-navy {
+    background-color: var(--navy-dark) !important;
+}
+
+.btn-login-nav {
+    background-color: var(--primary-blue);
+    color: white !important;
+    font-weight: 600;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-login-nav:hover {
+    background-color: var(--navy-blue);
+    transform: translateY(-1px);
+}
+
+/* Hero Header */
+.hero-dashboard {
+    background-color: #111827; /* Fondo oscuro sólido */
+    border-bottom: 4px solid var(--navy-blue);
+}
+
+.text-muted-light {
+    color: #9ca3af !important;
+}
+
+.text-navy {
+    color: var(--navy-dark);
+}
+
+.text-primary-blue {
+    color: var(--primary-blue);
+}
+
+/* Tarjetas Tipo Dashboard (Estadísticas) */
+.counter-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.counter-card i {
+    font-size: 2.5rem;
+}
+
+/* Tarjetas de Módulos */
+.feature-card-new {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.feature-card-new:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-blue);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+.icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background-color: #eff6ff;
+    color: var(--primary-blue);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.feature-card-new h4 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--navy-dark);
+}

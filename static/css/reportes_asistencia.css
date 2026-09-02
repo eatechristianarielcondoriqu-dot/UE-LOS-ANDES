@@ -1,0 +1,642 @@
+/* ============================================================================
+   REPORTES DE ASISTENCIA - Estilos CSS
+   ============================================================================ */
+
+:root {
+    --admin-blue: #1e40af;
+    --admin-light: #3b82f6;
+    --bg-main: #f8fafc;
+    --text-dark: #0f172a;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+}
+
+body {
+    background-color: var(--bg-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.main-container {
+    padding: 35px 25px;
+}
+
+/* ============================================================================
+   PANEL DE USUARIO
+   ============================================================================ */
+
+.user-panel-header {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 5px solid var(--admin-blue);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.avatar-circle {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--admin-blue), var(--admin-light));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 32px;
+    box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2);
+}
+
+.user-details h2 {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.role-badge {
+    background: #eff6ff;
+    color: var(--admin-blue);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-block;
+    margin-top: 4px;
+}
+
+.current-datetime {
+    text-align: right;
+}
+
+.current-datetime p {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.95rem;
+}
+
+.current-datetime p:first-child {
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+/* ============================================================================
+   HEADER PRINCIPAL
+   ============================================================================ */
+
+.crud-header h1 {
+    color: var(--text-dark);
+    font-weight: 600;
+    font-size: 2.1rem;
+}
+
+.crud-header p {
+    font-size: 1rem;
+    color: #64748b;
+}
+
+/* ============================================================================
+   TARJETAS DE ESTADÍSTICAS
+   ============================================================================ */
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card.blue {
+    border-left-color: #3b82f6;
+}
+
+.stat-card.green {
+    border-left-color: #10b981;
+}
+
+.stat-card.red {
+    border-left-color: #ef4444;
+}
+
+.stat-card.orange {
+    border-left-color: #f59e0b;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-card.blue .stat-icon {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
+.stat-card.green .stat-icon {
+    background: #f0fdf4;
+    color: #10b981;
+}
+
+.stat-card.red .stat-icon {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.stat-card.orange .stat-icon {
+    background: #fffbeb;
+    color: #f59e0b;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 4px;
+}
+
+.stat-percentage {
+    font-size: 0.75rem;
+    color: #10b981;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   INFO BOXES
+   ============================================================================ */
+
+.info-box {
+    display: flex;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+}
+
+.info-box:hover {
+    transform: translateY(-2px);
+}
+
+.info-box-icon {
+    width: 70px;
+    min-width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+}
+
+.info-box-content {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 1;
+}
+
+.info-box-text {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.info-box-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-top: 4px;
+}
+
+/* ============================================================================
+   CAJA DE BÚSQUEDA
+   ============================================================================ */
+
+.search-box-card {
+    border: none;
+    border-radius: 12px;
+    background: white;
+}
+
+.btn-search {
+    background-color: var(--admin-blue);
+    color: white;
+    border-color: var(--admin-blue);
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-search:hover {
+    background-color: var(--admin-light);
+    border-color: var(--admin-light);
+    color: white;
+}
+
+/* ============================================================================
+   TABLA PRINCIPAL
+   ============================================================================ */
+
+.data-card {
+    border: none;
+    border-radius: 14px;
+    overflow: hidden;
+    background: white;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead {
+    background-color: #f1f5f9;
+}
+
+.table th {
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    padding: 15px;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s;
+}
+
+.table tbody tr:hover {
+    background-color: #f8fafc;
+}
+
+/* ============================================================================
+   ELEMENTOS DE TABLA
+   ============================================================================ */
+
+.avatar-initials {
+    width: 40px;
+    height: 40px;
+    background-color: #eff6ff;
+    color: var(--admin-blue);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 0.85rem;
+}
+
+.rude-code {
+    background-color: #f1f5f9;
+    color: #374151;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.estado-badge {
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.estado-presente {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.estado-falta {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
+
+.estado-licencia {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.estado-atraso {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+}
+
+/* ============================================================================
+   BOTONES DE ACCIÓN
+   ============================================================================ */
+
+.btn-add-record {
+    background-color: var(--admin-blue);
+    color: white;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    transition: all 0.2s;
+}
+
+.btn-add-record:hover {
+    background-color: var(--admin-light);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(30, 64, 175, 0.25);
+}
+
+.btn-action {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    transition: transform 0.15s, background-color 0.2s;
+    cursor: pointer;
+}
+
+.btn-action:hover {
+    transform: scale(1.06);
+}
+
+.btn-edit {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}
+
+.btn-edit:hover {
+    background-color: #0284c7;
+    color: white;
+}
+
+.btn-hard-delete {
+    background-color: #ffebe9;
+    color: #ef4444;
+}
+
+.btn-hard-delete:hover {
+    background-color: #dc2626;
+    color: white;
+}
+
+/* ============================================================================
+   MODALES
+   ============================================================================ */
+
+.modal-content {
+    border: none;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    background-color: var(--admin-blue);
+    color: white;
+    border: none;
+}
+
+.modal-header.bg-dark {
+    background-color: #1f2937 !important;
+}
+
+.modal-title {
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.modal-footer {
+    background-color: #f8fafc;
+    border-top: 1px solid #e2e8f0;
+}
+
+.modal-body .form-label {
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.modal-body .form-control,
+.modal-body .form-select {
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.95rem;
+}
+
+.modal-body .form-control:focus,
+.modal-body .form-select:focus {
+    border-color: var(--admin-light);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+}
+
+/* ============================================================================
+   TIMELINE (Últimos registros)
+   ============================================================================ */
+
+.timeline {
+    position: relative;
+}
+
+.timeline-item {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 15px;
+}
+
+.timeline-badge {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.timeline-badge.estado-presente {
+    background-color: #10b981;
+}
+
+.timeline-badge.estado-falta {
+    background-color: #ef4444;
+}
+
+.timeline-badge.estado-licencia {
+    background-color: #f59e0b;
+}
+
+.timeline-badge.estado-atraso {
+    background-color: #06b6d4;
+}
+
+.timeline-content {
+    padding: 10px;
+    flex: 1;
+}
+
+.timeline-content h6 {
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+/* ============================================================================
+   RESPONSIVE DESIGN
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .crud-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .user-panel-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .user-info {
+        flex-direction: column;
+    }
+
+    .current-datetime {
+        text-align: center;
+    }
+
+    .table th,
+    .table td {
+        padding: 10px;
+        font-size: 0.85rem;
+    }
+
+    .stat-card {
+        margin-bottom: 15px;
+    }
+
+    .modal-dialog {
+        width: 95%;
+    }
+
+    .btn-add-record {
+        padding: 8px 15px;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .main-container {
+        padding: 20px 15px;
+    }
+
+    .crud-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 15px;
+    }
+
+    .table {
+        font-size: 0.75rem;
+    }
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        font-size: 0.75rem;
+    }
+
+    .user-panel-header {
+        padding: 15px;
+    }
+
+    .avatar-circle {
+        width: 60px;
+        height: 60px;
+        font-size: 24px;
+    }
+
+    .user-details h2 {
+        font-size: 1.2rem;
+    }
+}
+
+/* ============================================================================
+   ANIMACIONES
+   ============================================================================ */
+
+.alert {
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ============================================================================
+   UTILIDADES
+   ============================================================================ */
+
+.fw-semibold {
+    font-weight: 600;
+}
+
+.text-muted {
+    color: #64748b !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+}
