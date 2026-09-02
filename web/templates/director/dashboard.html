@@ -1,0 +1,172 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrativo - UE Los Andes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <link rel="stylesheet" href="{% static 'css/director_dashboard.css' %}">
+</head>
+<body>
+
+    {% include '../includes/navbar.html' %}
+
+    <div class="main-container">
+        <div class="container-fluid">
+            
+            <div class="header-section">
+                <h1><i class="fas fa-tachometer-alt"></i> Panel de Control</h1>
+                <p>Bienvenido, {{ nombres }} - Rol: {{ nombre_rol }}</p>
+            </div>
+
+            <div class="stats-container">
+                <div class="stat-card blue">
+                    <div class="stat-icon"><i class="fas fa-users"></i></div>
+                    <div class="stat-number">{{ stats.estudiantes }}</div>
+                    <div class="stat-label">Estudiantes Registrados</div>
+                </div>
+
+                <div class="stat-card green">
+                    <div class="stat-icon"><i class="fas fa-chalkboard-user"></i></div>
+                    <div class="stat-number">{{ stats.maestros }}</div>
+                    <div class="stat-label">Maestros Activos</div>
+                </div>
+
+                <div class="stat-card orange">
+                    <div class="stat-icon"><i class="fas fa-book"></i></div>
+                    <div class="stat-number">{{ stats.materias }}</div>
+                    <div class="stat-label">Materias Disponibles</div>
+                </div>
+
+                <div class="stat-card red">
+                    <div class="stat-icon"><i class="fas fa-shield-alt"></i></div>
+                    <div class="stat-number">{{ stats.usuarios }}</div>
+                    <div class="stat-label">Usuarios Activos</div>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h2><i class="fas fa-cog"></i> Gestión de Usuarios</h2>
+                <div class="menu-grid">
+                    
+                    <a href="{% url 'gestion_usuarios' %}" class="menu-item">
+                        <i class="fas fa-user-tie"></i>
+                        <h3>Gestionar Usuarios</h3>
+                        <p>Crear, editar y desactivar cuentas de usuarios del sistema</p>
+                    </a>
+
+                    <a href="{% url 'gestion_administrativos' %}" class="menu-item">
+                        <i class="fas fa-user-circle"></i>
+                        <h3>Personal Administrativo</h3>
+                        <p>Administrar personal administrativo y sus cargos</p>
+                    </a>
+
+                    <a href="{% url 'gestion_roles' %}" class="menu-item">
+                        <i class="fas fa-key"></i>
+                        <h3>Roles y Permisos</h3>
+                        <p>Configurar roles y permisos del sistema</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h2><i class="fas fa-book-open"></i> Gestión Académica</h2>
+                <div class="menu-grid">
+                    <a href="{% url 'gestion_maestros' %}" class="menu-item">
+                        <i class="fas fa-chalkboard-user"></i>
+                        <h3>Maestros</h3>
+                        <p>Gestionar maestros y sus especialidades</p>
+                    </a>
+
+                    <a href="{% url 'gestion_estudiantes' %}" class="menu-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <h3>Estudiantes</h3>
+                        <p>Registrar y gestionar estudiantes</p>
+                    </a>
+
+                    <a href="{% url 'malla_curricular' %}" class="menu-item">
+                        <i class="fas fa-network-wired"></i>
+                        <h3>Cursos y materias</h3>
+                        <p>Crear y gestionar materias, cursos, gestiones</p>
+                    </a>
+
+                    <a href="{% url 'asignacion_maestros' %}" class="menu-item">
+                        <i class="fas fa-tasks"></i>
+                        <h3>Asignaciones</h3>
+                        <p>Asignar maestros a materias y grupos</p>
+                    </a>
+
+                    <a href="{% url 'gestion_horarios' %}" class="menu-item">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>Horarios</h3>
+                        <p>Gestionar horarios de clases</p>
+                    </a>
+
+                    <a href="{% url 'gestion_padres' %}" class="menu-item">
+                        <i class="fas fa-users"></i>
+                        <h3>Padres/Tutores</h3>
+                        <p>Gestionar padres de familia</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h2><i class="fas fa-chart-bar"></i> Reportes y Documentos</h2>
+                <div class="menu-grid">
+                    <a href="{% url 'director_justificaciones' %}" class="menu-item">
+                        <i class="fas fa-file-alt"></i>
+                        <h3>Justificaciones</h3>
+                        <p>Revisar y aprobar documentos de justificación</p>
+                    </a>
+
+                    <a href="{% url 'reportes_asistencia' %}" class="menu-item">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>Reportes de Asistencia</h3>
+                        <p>Generar reportes de asistencia general</p>
+                    </a>
+
+                    <a href="/dashboard/director/calificaciones/" class="menu-item">
+                        <i class="fas fa-star"></i>
+                        <h3>Calificaciones</h3>
+                        <p>Ver y exportar reportes de calificaciones</p>
+                    </a>
+
+                    <a href="/dashboard/director/tareas/" class="menu-item">
+                        <i class="fas fa-list-check"></i>
+                        <h3>Tareas Asignadas</h3>
+                        <p>Visualizar todas las tareas del sistema</p>
+                    </a>
+                </div>
+            </div>
+
+            <div class="menu-section">
+                <h2><i class="fas fa-sliders-h"></i> Configuración del Sistema</h2>
+                <div class="menu-grid">
+                    <a href="/dashboard/director/backup/" class="menu-item">
+                        <i class="fas fa-database"></i>
+                        <h3>Respaldos</h3>
+                        <p>Crear y restaurar respaldos del sistema</p>
+                    </a>
+
+                    <a href="/dashboard/director/configuracion/" class="menu-item">
+                        <i class="fas fa-wrench"></i>
+                        <h3>Configuración General</h3>
+                        <p>Configurar parámetros del sistema</p>
+                    </a>
+
+                    <a href="/dashboard/director/logs/" class="menu-item">
+                        <i class="fas fa-history"></i>
+                        <h3>Registro de Actividades</h3>
+                        <p>Ver historial de cambios y accesos</p>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

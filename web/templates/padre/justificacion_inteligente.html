@@ -1,0 +1,609 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Justificaciones</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/justificaciones.css' %}">
+    <style>
+        /* ── Tabs de modo ── */
+        .modo-tab-nav .nav-link {
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            font-size: 0.84rem;
+            font-weight: 600;
+            padding: 7px 18px;
+        }
+        .modo-tab-nav .nav-link.active { color: #0d6efd; background:#fff; border-color:#dee2e6 #dee2e6 #fff; }
+        .modo-tab-body {
+            border: 1px solid #dee2e6;
+            border-radius: 0 8px 8px 8px;
+            padding: 16px;
+            background: #fff;
+        }
+        /* ── Zona drop adjunto ── */
+        .zona-drop {
+            border: 2px dashed #6ea8fe;
+            border-radius: 10px;
+            background: #f0f6ff;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .zona-drop:hover, .zona-drop.dragover { background: #dbeafe; }
+        .zona-drop i { font-size: 2rem; color: #6ea8fe; }
+        .zona-drop .lbl { font-size: .78rem; color: #6c757d; margin-top:5px; }
+        /* ── Preview adjunto ── */
+        .prev-adj {
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+            padding: 7px 12px;
+            font-size: .8rem;
+            background: #f8f9fa;
+            display: none;
+            align-items: center;
+            gap: 8px;
+        }
+        /* ── Canvas firma ── */
+        .lienzo-firma {
+            background: #fff;
+            border: 2px solid #dee2e6;
+            cursor: crosshair;
+            display: block;
+        }
+        .contenedor-foto-preview img { border-radius: 6px; border: 1px solid #dee2e6; }
+    </style>
+</head>
+
+<body class="bg-light">
+    {% include 'includes/navbar.html' %}
+
+    <div class="container py-5">
+
+        <!-- Cabecera -->
+        <div class="card shadow-sm border-0 p-4 mb-4 bg-white">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <h3 class="fw-bold text-dark m-0">
+                        <i class="bi bi-folder-shared text-primary me-2"></i>Mis Justificaciones Tramitadas
+                    </h3>
+                    <p class="text-muted m-0 small">Historial de inasistencias y licencias registradas.</p>
+                </div>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-danger px-3 rounded-pill"
+                        data-bs-toggle="modal" data-bs-target="#modalConfigBase"
+                        onclick="abrirCamaraPatron()">
+                        <i class="bi bi-person-bounding-box me-1"></i> Configurar Perfil Patrón
+                    </button>
+                    <button class="btn btn-primary px-4 rounded-pill"
+                        data-bs-toggle="modal" data-bs-target="#modalNuevoTramite"
+                        onclick="resetearModal()">
+                        <i class="bi bi-send-plus-fill me-1"></i> Iniciar Trámite
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensajes -->
+        {% if messages %}
+            {% for m in messages %}
+            <div class="alert alert-dark alert-dismissible fade show rounded-3 small" role="alert">
+                {{ m }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Tabla historial -->
+        <div class="card shadow-sm border-0 bg-white">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Motivo / Tipo</th>
+                            <th>Fecha Evento</th>
+                            <th>Fecha Registro</th>
+                            <th>Estado IA</th>
+                            <th class="text-center">Documentos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in historial %}
+                        <tr>
+                            <td class="fw-bold">{{ doc.id_estudiante.id_persona.nombres }}</td>
+                            <td><span class="small text-secondary d-block">{{ doc.motivo }}</span></td>
+                            <td><i class="bi bi-calendar-event me-1"></i>{{ doc.fecha_inicio|date:"d/m/Y" }}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border">
+                                    {{ doc.fecha_subida|date:"d/m/Y H:i" }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge
+                                    {% if doc.estado == 'APROBADO' %}bg-success
+                                    {% elif doc.estado == 'PENDIENTE' %}bg-warning text-dark
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ doc.estado }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    {% if doc.es_adjunto %}
+                                        <!-- MODO ADJUNTO: solo muestra el archivo subido -->
+                                        <a href="{% get_static_prefix %}{{ doc.adjunto_limpio }}"
+                                           target="_blank" class="btn btn-outline-primary">
+                                            <i class="bi bi-paperclip me-1"></i>Ver Documento
+                                        </a>
+                                    {% else %}
+                                        <!-- MODO FORMULARIO: PDF generado + firma + foto -->
+                                        {% if doc.pdf_limpio %}
+                                        <a href="{% get_static_prefix %}{{ doc.pdf_limpio }}"
+                                           target="_blank" class="btn btn-outline-danger">
+                                            <i class="bi bi-file-pdf"></i> PDF
+                                        </a>
+                                        {% endif %}
+                                        {% if doc.firma_limpia %}
+                                        <a href="{% get_static_prefix %}{{ doc.firma_limpia }}"
+                                           target="_blank" class="btn btn-outline-secondary">Firma</a>
+                                        {% endif %}
+                                        {% if doc.foto_limpia %}
+                                        <a href="{% get_static_prefix %}{{ doc.foto_limpia }}"
+                                           target="_blank" class="btn btn-outline-secondary">Cara</a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted small">
+                                Ningún documento registrado en su cuenta de apoderado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div><!-- /container -->
+
+
+    <!-- ==========================================================
+         MODAL 1: BIOMETRÍA PATRÓN
+    =========================================================== -->
+    <div class="modal fade" id="modalConfigBase" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-fingerprint me-2"></i>1. Registro Inicial de Biometría Base
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" onclick="cerrarCamaras()"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="row g-3">
+                        <div class="col-md-6 text-center">
+                            <span class="d-block text-start small fw-bold mb-1">
+                                Paso A: Fotografía Facial Base
+                            </span>
+                            <video id="vidPatron" width="100%" height="160" autoplay class="bg-dark rounded"></video>
+                            <button type="button" class="btn btn-sm btn-secondary w-100 mt-2 mb-3"
+                                onclick="capturarFotoPatron()">Congelar Fotografía</button>
+                            <div class="contenedor-foto-preview">
+                                <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                    <span class="text-muted small fw-semibold">
+                                        <i class="bi bi-camera-fill me-1"></i> Vista de Captura
+                                    </span>
+                                    <span class="badge bg-secondary rounded-pill small">Patrón</span>
+                                </div>
+                                <img id="prevPatronFace"
+                                    src="https://via.placeholder.com/150x100?text=Esperando+Captura"
+                                    class="w-100" style="object-fit:cover;">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="d-block text-start small fw-bold mb-1">
+                                Paso B: Firma Patrón
+                            </span>
+                            <canvas id="canPatronSign" width="360" height="200"
+                                class="lienzo-firma w-100 rounded"></canvas>
+                            <button type="button" class="btn btn-sm btn-link text-danger w-100 text-end"
+                                onclick="limpiarCanvas('canPatronSign')">Limpiar Trazo</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white">
+                    <button type="button" class="btn btn-sm btn-light border"
+                        data-bs-dismiss="modal" onclick="cerrarCamaras()">Cerrar</button>
+                    <button type="button" class="btn btn-sm btn-danger px-4"
+                        onclick="guardarBiometriaBase()">Registrar Mis Credenciales</button>
+                </div>
+                <form method="POST" id="formBiometriaBase">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="registrar_biometria_base">
+                    <input type="hidden" name="firma_data" id="in_patron_firma">
+                    <input type="hidden" name="foto_data"  id="in_patron_foto">
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==========================================================
+         MODAL 2: TRÁMITE — DOS MODOS
+    =========================================================== -->
+    <div class="modal fade" id="modalNuevoTramite" data-bs-backdrop="static" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-file-earmark-diff me-2"></i>2. Solicitud de Licencia / Permiso
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" onclick="cerrarCamaras()"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <!-- Selector de modo -->
+                    <ul class="nav modo-tab-nav mb-0" id="modoTabs" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" id="tab-form-btn"
+                                data-bs-toggle="tab" data-bs-target="#tabFormulario"
+                                type="button" onclick="activarModoFormulario()">
+                                <i class="bi bi-camera-video me-1"></i>
+                                Formulario Biométrico
+                                <span class="badge bg-primary ms-1 small">Genera PDF</span>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" id="tab-adj-btn"
+                                data-bs-toggle="tab" data-bs-target="#tabAdjunto"
+                                type="button" onclick="activarModoAdjunto()">
+                                <i class="bi bi-paperclip me-1"></i>
+                                Subir Documento
+                                <span class="badge bg-secondary ms-1 small">PDF / Imagen</span>
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <!-- ──────────────────────────────────────────
+                             TAB A: FORMULARIO BIOMÉTRICO
+                        ─────────────────────────────────────────── -->
+                        <div class="tab-pane fade show active modo-tab-body" id="tabFormulario">
+                            <form method="POST" id="formJustificar">
+                                {% csrf_token %}
+                                <input type="hidden" name="action"          value="generar_justificativo">
+                                <input type="hidden" name="firma_carta_data" id="in_carta_firma">
+                                <input type="hidden" name="foto_facial_data" id="in_carta_foto">
+
+                                <div class="row g-3 mt-1">
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold form-label">Estudiante Relacionado</label>
+                                        <select name="id_estudiante" class="form-select form-select-sm" required>
+                                            {% for h in hijos %}
+                                            <option value="{{ h.id_student }}">
+                                                {{ h.id_persona.nombres }} {{ h.id_persona.apellidos }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold form-label">Tipo de Licencia</label>
+                                        <select name="tipo_licencia"
+                                            class="form-select form-select-sm fw-bold text-primary" required>
+                                            <option value="LICENCIA DE TOLERANCIA">
+                                                Licencia de Tolerancia (Llegada Tarde)
+                                            </option>
+                                            <option value="PERMISO PARA FALTAR">
+                                                Permiso para Faltar (Falta Completa)
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold form-label">Fecha del Suceso</label>
+                                        <input type="date" name="fecha_falta"
+                                            class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold form-label">Motivo Principal</label>
+                                        <input type="text" name="motivo"
+                                            class="form-control form-control-sm"
+                                            placeholder="Ej: Problemas de salud urgentes" required>
+                                    </div>
+
+                                    <!-- Foto en vivo -->
+                                    <div class="col-md-6 text-center bg-light p-2 rounded border">
+                                        <span class="small fw-bold d-block mb-1">Foto de validación</span>
+                                        <video id="vidTramite" width="100%" height="130"
+                                            autoplay class="bg-dark rounded"></video>
+                                        <button type="button"
+                                            class="btn btn-xs btn-warning w-100 mt-1 mb-2 small py-1"
+                                            onclick="capturarFotoTramite()">Capturar Rostro</button>
+                                        <div class="contenedor-foto-preview text-start">
+                                            <div class="d-flex justify-content-between align-items-center mb-2 px-1">
+                                                <span class="text-muted small fw-semibold">
+                                                    <i class="bi bi-shield-check me-1"></i> Verificación
+                                                </span>
+                                                <span class="badge bg-warning text-dark rounded-pill small">
+                                                    Trámite
+                                                </span>
+                                            </div>
+                                            <img id="prevTramiteFace"
+                                                src="https://via.placeholder.com/150x90?text=Imagen+Capturada"
+                                                class="w-100" style="object-fit:cover;">
+                                        </div>
+                                    </div>
+
+                                    <!-- Canvas firma -->
+                                    <div class="col-md-6">
+                                        <span class="small fw-bold d-block mb-1">Firme aquí:</span>
+                                        <canvas id="canTramiteSign" width="360" height="170"
+                                            class="lienzo-firma w-100 rounded"></canvas>
+                                        <button type="button"
+                                            class="btn btn-sm btn-link text-secondary w-100 text-end"
+                                            onclick="limpiarCanvas('canTramiteSign')">
+                                            Recomenzar Firma
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div><!-- /tabFormulario -->
+
+
+                        <!-- ──────────────────────────────────────────
+                             TAB B: SUBIR DOCUMENTO
+                        ─────────────────────────────────────────── -->
+                        <div class="tab-pane fade modo-tab-body" id="tabAdjunto">
+                            <form method="POST" id="formAdjunto" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <input type="hidden" name="action"         value="generar_justificativo">
+                                <input type="hidden" name="firma_carta_data" value="">
+                                <input type="hidden" name="foto_facial_data" value="">
+
+                                <div class="row g-3 mt-1">
+
+                                    <!-- Datos del trámite (también para adjunto) -->
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold form-label">Estudiante</label>
+                                        <select name="id_estudiante"
+                                            class="form-select form-select-sm" required>
+                                            {% for h in hijos %}
+                                            <option value="{{ h.id_student }}">
+                                                {{ h.id_persona.nombres }} {{ h.id_persona.apellidos }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold form-label">Fecha del Suceso</label>
+                                        <input type="date" name="fecha_falta"
+                                            class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="small fw-bold form-label">
+                                            Motivo
+                                            <span class="text-muted fw-normal">
+                                                (opcional si el documento lo indica)
+                                            </span>
+                                        </label>
+                                        <input type="text" name="motivo"
+                                            class="form-control form-control-sm"
+                                            placeholder="El sistema intentará extraerlo del documento">
+                                    </div>
+
+                                    <!-- Zona de drop -->
+                                    <div class="col-12">
+                                        <label class="small fw-bold form-label">
+                                            <i class="bi bi-upload me-1"></i>
+                                            Documento de Permiso / Licencia
+                                            <span class="text-muted fw-normal">(PDF · JPG · PNG — máx. 5 MB)</span>
+                                        </label>
+                                        <div class="zona-drop" id="zonaDrop"
+                                            onclick="document.getElementById('archivoAdjunto').click()"
+                                            ondragover="event.preventDefault(); this.classList.add('dragover')"
+                                            ondragleave="this.classList.remove('dragover')"
+                                            ondrop="manejarDrop(event)">
+                                            <i class="bi bi-cloud-arrow-up"></i>
+                                            <span class="lbl">Haga clic o arrastre su archivo aquí</span>
+                                            <span class="lbl">PDF · JPG · PNG</span>
+                                        </div>
+                                        <input type="file" id="archivoAdjunto" name="archivo_adjunto"
+                                            accept=".pdf,.jpg,.jpeg,.png" class="d-none"
+                                            onchange="mostrarPreviewAdjunto(this)">
+
+                                        <!-- Preview nombre -->
+                                        <div class="prev-adj mt-2" id="previewAdjunto">
+                                            <i class="bi bi-file-earmark-fill text-danger fs-5"></i>
+                                            <span id="nombreAdj" class="fw-semibold"></span>
+                                            <span class="badge bg-secondary" id="tipoAdj"></span>
+                                            <span class="ms-auto text-muted" id="tamAdj"></span>
+                                            <button type="button"
+                                                class="btn btn-sm btn-link text-danger p-0 ms-2"
+                                                onclick="limpiarAdjunto()">
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            </button>
+                                        </div>
+
+                                        <!-- Preview imagen -->
+                                        <div class="mt-2 text-center d-none" id="previewImgAdj">
+                                            <img id="imgAdjPreview" src="" alt="Preview"
+                                                style="max-height:180px; border-radius:8px;
+                                                       border:1px solid #dee2e6; max-width:100%;">
+                                        </div>
+                                    </div>
+
+                                    <!-- Info IA -->
+                                    <div class="col-12">
+                                        <div class="alert alert-info py-2 px-3 small mb-0">
+                                            <i class="bi bi-robot me-1"></i>
+                                            <strong>IA:</strong>
+                                            El sistema extraerá el texto del documento para registrar los datos
+                                            automáticamente, y comparará la firma del documento con su
+                                            <strong>firma patrón registrada</strong>.
+                                            No se pide foto en este modo.
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div><!-- /tabAdjunto -->
+
+                    </div><!-- /tab-content -->
+                </div><!-- /modal-body -->
+
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-sm btn-secondary"
+                        data-bs-dismiss="modal" onclick="cerrarCamaras()">Cancelar</button>
+                    <button type="button" class="btn btn-sm btn-primary px-4 fw-bold"
+                        onclick="enviarTramite()">
+                        <i class="bi bi-send-check me-1"></i> Procesar Solicitud
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><!-- /modal tramite -->
+
+
+    <!-- Canvas oculto para muestreo -->
+    <canvas id="canvasMuestreo" width="320" height="240" class="d-none"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/justificaciones.js' %}"></script>
+
+    <script>
+    // ==========================================================================
+    // CONTROL DE MODO (formulario / adjunto)
+    // ==========================================================================
+    let modoActual = 'formulario';   // 'formulario' | 'adjunto'
+
+    function activarModoFormulario() {
+        modoActual = 'formulario';
+        abrirCamaraTramite();
+    }
+
+    function activarModoAdjunto() {
+        modoActual = 'adjunto';
+        cerrarCamaraTramite();
+    }
+
+    function resetearModal() {
+        modoActual = 'formulario';
+        // Volver al tab formulario
+        const tabFormBtn = document.getElementById('tab-form-btn');
+        if (tabFormBtn) bootstrap.Tab.getOrCreateInstance(tabFormBtn).show();
+        abrirCamaraTramite();
+        limpiarAdjunto();
+    }
+
+    // Solo cierra la cámara de trámite, no la de patrón
+    function cerrarCamaraTramite() {
+        const vid = document.getElementById('vidTramite');
+        if (vid && vid.srcObject) {
+            vid.srcObject.getTracks().forEach(t => t.stop());
+            vid.srcObject = null;
+        }
+    }
+
+    // ==========================================================================
+    // ENVÍO UNIFICADO
+    // ==========================================================================
+    function enviarTramite() {
+        if (modoActual === 'formulario') {
+            // Exportar firma al hidden
+            const canvas = document.getElementById('canTramiteSign');
+            document.getElementById('in_carta_firma').value = canvas.toDataURL('image/png');
+            // La foto ya está en in_carta_foto (puesta por capturarFotoTramite)
+            const foto = document.getElementById('in_carta_foto').value;
+            if (!foto) {
+                alert('Por favor capture su rostro antes de enviar.');
+                return;
+            }
+            document.getElementById('formJustificar').submit();
+        } else {
+            // Modo adjunto
+            const archivo = document.getElementById('archivoAdjunto').files[0];
+            if (!archivo) {
+                alert('Por favor seleccione un archivo PDF o imagen.');
+                return;
+            }
+            document.getElementById('formAdjunto').submit();
+        }
+    }
+
+    // ==========================================================================
+    // DRAG & DROP + PREVIEW DE ADJUNTO
+    // ==========================================================================
+    function manejarDrop(e) {
+        e.preventDefault();
+        document.getElementById('zonaDrop').classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('archivoAdjunto').files = dt.files;
+        mostrarPreviewAdjunto(document.getElementById('archivoAdjunto'));
+    }
+
+    function mostrarPreviewAdjunto(input) {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) {
+            alert('El archivo supera los 5 MB permitidos.');
+            limpiarAdjunto();
+            return;
+        }
+        const ext = file.name.split('.').pop().toUpperCase();
+        document.getElementById('nombreAdj').textContent = file.name;
+        document.getElementById('tipoAdj').textContent   = ext;
+        document.getElementById('tamAdj').textContent    =
+            (file.size / 1024).toFixed(0) + ' KB';
+
+        const prev = document.getElementById('previewAdjunto');
+        prev.style.display = 'flex';
+
+        // Ícono según tipo
+        const ico = prev.querySelector('i');
+        if (ext === 'PDF') {
+            ico.className = 'bi bi-file-earmark-pdf-fill text-danger fs-5';
+        } else {
+            ico.className = 'bi bi-file-earmark-image-fill text-info fs-5';
+        }
+
+        // Preview imagen
+        const imgBox = document.getElementById('previewImgAdj');
+        if (file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('imgAdjPreview').src = e.target.result;
+                imgBox.classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            imgBox.classList.add('d-none');
+        }
+    }
+
+    function limpiarAdjunto() {
+        document.getElementById('archivoAdjunto').value = '';
+        document.getElementById('previewAdjunto').style.display = 'none';
+        document.getElementById('previewImgAdj').classList.add('d-none');
+        document.getElementById('imgAdjPreview').src = '';
+    }
+    </script>
+</body>
+</html>

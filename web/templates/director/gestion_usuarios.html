@@ -1,0 +1,348 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Usuarios - UE Los Andes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/gestion_usuarios.css' %}">
+</head>
+
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="crud-container">
+        <div class="container-fluid">
+
+            <div class="crud-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-users-cog"></i> Gestión de Usuarios</h1>
+                    <p class="text-muted">Panel administrativo de control de credenciales, auditoría y estados de acceso
+                    </p>
+                </div>
+                <button class="btn btn-add-user shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateUser">
+                    <i class="fas fa-plus-circle me-1"></i> Insertar Nuevo Usuario
+                </button>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-primary border-4">
+                        <span class="ref-label">Usuarios Totales</span>
+                        <div class="ref-value">{{ referencias.total }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-success border-4">
+                        <span class="ref-label">Cuentas Activas</span>
+                        <div class="ref-value text-success">{{ referencias.activos }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-danger border-4">
+                        <span class="ref-label">Cuentas Inactivas</span>
+                        <div class="ref-value text-danger">{{ referencias.inactivos }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-info border-4">
+                        <span class="ref-label">Personal del Colegio</span>
+                        <div class="ref-subtext">Maestros: <b>{{ referencias.maestros }}</b> | Padres: <b>{{
+                                referencias.padres }}</b></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card p-3 mb-4 shadow-sm search-box-card">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-7">
+                        <form method="GET" action="{% url 'gestion_usuarios' %}" class="d-flex gap-2 w-100">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i
+                                        class="fas fa-search text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0" name="search"
+                                    value="{{ search_query }}"
+                                    placeholder="Buscar usuario por Nombre, Apellido, Nickname o Cédula...">
+                            </div>
+                            <button type="submit" class="btn btn-search fw-bold px-4">Buscar</button>
+                            {% if search_query %}
+                            <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline-secondary"
+                                title="Limpiar Filtros"><i class="fas fa-sync-alt"></i></a>
+                            {% endif %}
+                        </form>
+                    </div>
+
+                    <div class="col-md-5 d-flex justify-content-md-end justify-content-start">
+                        <a href="{% url 'gestion_usuarios' %}?toggle_estudiantes=1{% if search_query %}&search={{ search_query }}{% endif %}"
+                            class="btn {% if ver_estudiantes %}btn-success{% else %}btn-secondary{% endif %} fw-bold shadow-sm d-flex align-items-center gap-2"
+                            {% if not ver_estudiantes %}style="background-color: #6c757d; color: white;" {% endif %}>
+                            {% if ver_estudiantes %}
+                            <i class="fas fa-toggle-on fa-lg"></i> Estudiantes: PERMITIDOS
+                            {% else %}
+                            <i class="fas fa-toggle-off fa-lg"></i> Estudiantes: OCULTOS
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'info' %}primary{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="card data-card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Persona Vinculada</th>
+                                <th>Rol Interno</th>
+                                <th>Nombre de Usuario</th>
+                                <th>Control de Estado</th>
+                                <th class="text-center">Acciones Avanzadas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in usuarios %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-initials me-3">
+                                            {{ u.id_persona.nombres|slice:":1" }}{{ u.id_persona.apellidos|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-dark fw-bold">{{ u.id_persona.nombres }} {{u.id_persona.apellidos }}</h6>
+                                            <small class="text-muted">CI: {{ u.id_persona.dni_cedula }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge role-badge badge-{{ u.id_role.nombre_rol|lower }}">
+                                        {{ u.id_role.nombre_rol|upper }}
+                                    </span>
+                                </td>
+                                <td><code class="username-code">@{{ u.username }}</code></td>
+                                <td>
+                                    <form method="POST" action="{% url 'gestion_usuarios' %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="toggle_status">
+                                        <input type="hidden" name="id_usuario" value="{{ u.id_usuario }}">
+                                        {% if u.activo %}
+                                        <button type="submit" class="btn status-pill badge-active"
+                                            title="Haga clic para bloquear acceso al Login">
+                                            <i class="fas fa-check-circle text-success me-1"></i> ACTIVO
+                                        </button>
+                                        {% else %}
+                                        <button type="submit" class="btn status-pill badge-inactive"
+                                            title="Haga clic para activar acceso">
+                                            <i class="fas fa-ban text-danger me-1"></i> INACTIVO
+                                        </button>
+                                        {% endif %}
+                                    </form>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group gap-2">
+                                        <button type="button" class="btn btn-action btn-edit" data-bs-toggle="modal"
+                                            data-bs-target="#modalEditUser" data-id="{{ u.id_usuario }}"
+                                            data-persona="{{ u.id_persona.id_persona }}"
+                                            data-nombre-persona="{{ u.id_persona.nombres }} {{ u.id_persona.apellidos }}"
+                                            data-rol="{{ u.id_role.id_rol }}" data-username="{{ u.username }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-action btn-soft-delete"
+                                            title="Eliminación Lógica (Mantener registro histórico)"
+                                            data-bs-toggle="modal" data-bs-target="#modalSoftDelete"
+                                            data-id="{{ u.id_usuario }}" data-username="{{ u.username }}">
+                                            <i class="fas fa-user-slash"></i>
+                                        </button>
+                                        <button class="btn btn-action btn-hard-delete"
+                                            title="Purgar definitivamente de la Base de Datos" data-bs-toggle="modal"
+                                            data-bs-target="#modalHardDelete" data-id="{{ u.id_usuario }}"
+                                            data-username="{{ u.username }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-search-minus display-4 mb-3 d-block text-secondary"></i>
+                                    No se encontraron registros de usuario coincidentes.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCreateUser" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-user-plus me-2"></i> Insertar Nuevo Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'gestion_usuarios' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Asociar a Persona Física <small
+                                    class="text-primary">(Solo personas sin cuenta activa)</small></label>
+                            <select class="form-select" name="id_persona" required>
+                                <option value="" disabled selected>-- Elija una Persona --</option>
+                                {% for p in personas %}
+                                <option value="{{ p.id_persona }}">
+                                    {{ p.nombres }} {{ p.apellidos }} (CI: {{ p.dni_cedula }}) — [{{ p.rol_tag }}]
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rol del Sistema</label>
+                            <select class="form-select" name="id_role" required>
+                                <option value="" disabled selected>-- Seleccione Rol --</option>
+                                {% for r in roles %}
+                                <option value="{{ r.id_rol }}">{{ r.nombre_rol|upper }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre de Usuario (Username)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" class="form-control" name="username" placeholder="ejemplo12"
+                                    required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Contraseña Inicial</label>
+                            <input type="password" class="form-control" name="password"
+                                placeholder="Establecer contraseña de ingreso" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">Insertar Datos</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditUser" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> Editar Datos de Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'gestion_usuarios' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id_usuario" id="edit_id_usuario">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-muted">
+                                <i class="fas fa-lock me-1"></i> Persona Vinculada <small class="text-danger">(No
+                                    modificable)</small>
+                            </label>
+                            <input type="text" class="form-control bg-light text-muted fw-bold" id="edit_persona_nombre"
+                                readonly style="cursor: not-allowed;">
+                            <input type="hidden" name="id_persona" id="edit_id_persona">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rol Asignado</label>
+                            <select class="form-select" name="id_role" id="edit_id_role" required>
+                                {% for r in roles %}
+                                <option value="{{ r.id_rol }}">{{ r.nombre_rol|upper }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text">@</span>
+                                <input type="text" class="form-control" name="username" id="edit_username" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Contraseña <small class="text-muted">(Dejar en blanco
+                                    para no modificar)</small></label>
+                            <input type="password" class="form-control" name="password"
+                                placeholder="Nueva clave opcional">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Descartar</button>
+                        <button type="submit" class="btn btn-dark px-4">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalSoftDelete" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-user-slash text-warning display-4 mb-3"></i>
+                    <h4 class="fw-bold">¿Aplicar Eliminación Lógica?</h4>
+                    <p class="text-muted">El usuario <b id="soft_username" class="text-dark"></b> se mantendrá en los
+                        registros, pero se le **negará totalmente el ingreso** al sistema hasta que sea reactivado.</p>
+                    <form method="POST" action="{% url 'gestion_usuarios' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="soft_delete">
+                        <input type="hidden" name="id_usuario" id="soft_id_usuario">
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning text-dark px-4 fw-bold">Deshabilitar
+                                Cuenta</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalHardDelete" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-exclamation-triangle text-danger display-4 mb-3"></i>
+                    <h4 class="fw-bold text-danger">¿Purgar definitivamente del Servidor?</h4>
+                    <p class="text-muted">Esta operación es irreversible. Eliminará físicamente al usuario <b
+                            id="hard_username" class="text-dark"></b> de la base de datos.</p>
+                    <form method="POST" action="{% url 'gestion_usuarios' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="hard_delete">
+                        <input type="hidden" name="id_usuario" id="hard_id_usuario">
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger px-4 fw-bold">Sí, Eliminar de Raíz</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/gestion_usuarios.js' %}"></script>
+</body>
+
+</html>

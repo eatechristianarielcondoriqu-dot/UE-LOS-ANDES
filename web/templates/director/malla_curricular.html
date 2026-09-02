@@ -1,0 +1,257 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control Curricular</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+     <link rel="stylesheet" href="{% static 'css/malla_curricular.css' %}">
+</head>
+<body>
+ {% include 'includes/navbar.html' %}
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-slate-800"><i class="fa-solid fa-network-wired text-primary me-2"></i>Asignación de Materias a cursos</h1>
+                <p class="text-muted small mb-0">Gestión Dinámica de Cursos y Asignaturas</p>
+            </div>
+            
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <label class="fw-bold text-secondary text-nowrap mb-0">Gestión Activa:</label>
+                <select name="gestion_id" class="form-select form-select-sm bg-light" onchange="this.form.submit()">
+                    {% for g in gestiones %}
+                        <option value="{{ g.id_gestion }}" {% if g.id_gestion == gestion_activa.id_gestion %}selected{% endif %}>
+                            {{ g.anio }} {% if g.activa %}(Actual){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <ul class="nav nav-pills mb-3 gap-2" id="mallaTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active rounded-pill shadow-sm" id="matriz-tab" data-bs-toggle="tab" data-bs-target="#matriz" type="button"><i class="fa-solid fa-table me-2"></i>Matriz Curricular</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill shadow-sm" id="gestiones-tab" data-bs-toggle="tab" data-bs-target="#gestiones" type="button"><i class="fa-solid fa-calendar-days me-2"></i>Gestiones</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill shadow-sm" id="cursos-tab" data-bs-toggle="tab" data-bs-target="#cursos" type="button"><i class="fa-solid fa-graduation-cap me-2"></i>Cursos</button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link rounded-pill shadow-sm" id="materias-tab" data-bs-toggle="tab" data-bs-target="#materias" type="button"><i class="fa-solid fa-book-open me-2"></i>Asignaturas</button>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="matriz">
+                <div class="card dashboard-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-bold text-dark mb-0">Distribución de Materias por Curso</h5>
+                        <button class="btn btn-sm btn-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#modalAsignarMalla">
+                            <i class="fa-solid fa-plus me-1"></i> Vincular Materia
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead>
+                                <tr class="text-center">
+                                    <th style="width: 30%;">Curso / Paralelo</th>
+                                    <th style="width: 70%;">Asignaturas Planificadas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in matriz_malla %}
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="fw-bold text-dark">{{ item.curso.nombre }} "{{ item.curso.paralelo }}"</div>
+                                            <small class="text-muted text-uppercase font-monospace" style="font-size: 0.75rem;">{{ item.curso.nivel }}</small>
+                                        </td>
+                                        <td class="p-3">
+                                            <div class="d-flex flex-wrap gap-2">
+                                                {% for celda in item.fila %}
+                                                    <span class="badge bg-light text-dark border d-flex align-items-center gap-2 py-2 px-3 shadow-sm rounded-pill">
+                                                        <i class="fa-solid fa-book text-secondary small"></i>
+                                                        <span class="fw-semibold">{{ celda.materia.nombre_materia }}</span>
+                                                        <button type="button" class="btn-close btn-del-malla" 
+                                                                style="font-size: 0.65rem;"
+                                                                data-id="{{ celda.id_curso_materia }}"
+                                                                data-info="{{ celda.materia.nombre_materia }} de {{ item.curso.nombre }} '{{ item.curso.paralelo }}'" 
+                                                                title="Eliminar asignación"></button>
+                                                    </span>
+                                                {% empty %}
+                                                    <span class="text-muted small my-1 italic"><i class="fa-solid fa-triangle-exclamation me-1 text-warning"></i> Sin materias asignadas</span>
+                                                {% endfor %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="2" class="text-center py-4 text-muted">No existen cursos registrados en el sistema.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="gestiones">
+                <div class="card dashboard-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-bold mb-0">Listado de Gestiones Escolares</h5>
+                        <button class="btn btn-dark btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalGestion"><i class="fa-solid fa-plus me-1"></i>Nueva Gestión</button>
+                    </div>
+                    <table class="table table-striped">
+                        <thead><tr><th>ID</th><th>Año</th><th>Estado</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            {% for g in gestiones %}
+                            <tr>
+                                <td>{{ g.id_gestion }}</td>
+                                <td class="fw-bold">{{ g.anio }}</td>
+                                <td>{% if g.activa %}<span class="badge bg-success">Activa</span>{% else %}<span class="badge bg-secondary">Inactiva</span>{% endif %}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning btn-edit-gestion" data-id="{{ g.id_gestion }}" data-anio="{{ g.anio }}" data-activa="{{ g.activa|yesno:'true,false' }}"><i class="fa-solid fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-danger btn-del-global" data-action="eliminar_gestion" data-id="{{ g.id_gestion }}" data-info="Gestión {{ g.anio }}"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="cursos">
+                <div class="card dashboard-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-bold mb-0">Catálogo Institucional de Cursos</h5>
+                        <button class="btn btn-dark btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalCurso"><i class="fa-solid fa-plus me-1"></i>Nuevo Curso</button>
+                    </div>
+                    <table class="table table-striped">
+                        <thead><tr><th>ID</th><th>Curso</th><th>Paralelo</th><th>Nivel</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            {% for c in cursos %}
+                            <tr>
+                                <td>{{ c.id_curso }}</td>
+                                <td class="fw-bold">{{ c.nombre }}</td>
+                                <td><span class="badge bg-info text-dark">{{ c.paralelo }}</span></td>
+                                <td>{{ c.nivel }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning btn-edit-curso" data-id="{{ c.id_curso }}" data-nombre="{{ c.nombre }}" data-nivel="{{ c.nivel }}" data-paralelo="{{ c.paralelo }}"><i class="fa-solid fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-danger btn-del-global" data-action="eliminar_curso" data-id="{{ c.id_curso }}" data-info="{{ c.nombre }} '{{ c.paralelo }}'"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="tab-pane fade" id="materias">
+                <div class="card dashboard-card p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="card-title fw-bold mb-0">Catálogo Base de Asignaturas</h5>
+                        <button class="btn btn-dark btn-sm rounded-pill" data-bs-toggle="modal" data-bs-target="#modalMateria"><i class="fa-solid fa-plus me-1"></i>Nueva Asignatura</button>
+                    </div>
+                    <table class="table table-striped" style="max-width: 700px;">
+                        <thead><tr><th>Código</th><th>Nombre de la Asignatura</th><th>Acciones</th></tr></thead>
+                        <tbody>
+                            {% for m in materias %}
+                            <tr>
+                                <td class="font-monospace">MAT-{{ m.id_materia }}</td>
+                                <td class="fw-bold text-start ps-4">{{ m.nombre_materia }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-warning btn-edit-materia" data-id="{{ m.id_materia }}" data-nombre="{{ m.nombre_materia }}"><i class="fa-solid fa-edit"></i></button>
+                                    <button class="btn btn-sm btn-danger btn-del-global" data-action="eliminar_materia" data-id="{{ m.id_materia }}" data-info="{{ m.nombre_materia }}"><i class="fa-solid fa-trash"></i></button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAsignarMalla" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" class="modal-content">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="crear_malla">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-link me-2"></i>Vincular Asignatura</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Curso Destino</label>
+                        <select name="id_curso" class="form-select" required>
+                            {% for c in cursos %}
+                                <option value="{{ c.id_curso }}">{{ c.nombre }} "{{ c.paralelo }}"</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Asignatura</label>
+                        <select name="id_materia" class="form-select" required>
+                            {% for m in materias %}
+                                <option value="{{ m.id_materia }}">{{ m.nombre_materia }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Establecer Vínculo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfirmarAccion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <form method="POST" class="modal-content">
+                {% csrf_token %}
+                <input type="hidden" name="action" id="inputAction">
+                <input type="hidden" name="" id="inputTarget">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h6 class="modal-title fw-bold">Confirmar Acción</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-3">
+                    <p class="small mb-2" id="textLabel">¿Está seguro de eliminar el siguiente registro?</p>
+                    <p id="textInfo" class="fw-bold text-dark small bg-light p-2 rounded border"></p>
+                </div>
+                <div class="modal-footer py-1 d-flex justify-content-between">
+                    <button type="button" class="btn btn-light btn-sm border" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalGestion" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form method="POST" class="modal-content">{% csrf_token %}<input type="hidden" name="action" value="guardar_gestion"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Agregar Gestión</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Año</label><input type="number" name="anio" class="form-control" required></div><div class="mb-3 form-check form-switch"><input class="form-check-input" type="checkbox" name="activa" value="true"><label class="form-check-label">Marcar Activa</label></div></div><div class="modal-footer"><button type="submit" class="btn btn-dark btn-sm">Guardar</button></div></form></div></div>
+    <div class="modal fade" id="modalEditGestion" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form method="POST" class="modal-content">{% csrf_token %}<input type="hidden" name="action" value="editar_gestion"><input type="hidden" name="id_gestion" id="edit_g_id"><div class="modal-header bg-warning"><h5 class="modal-title">Editar Gestión</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Año</label><input type="number" name="anio" id="edit_g_anio" class="form-control" required></div><div class="mb-3 form-check form-switch"><input class="form-check-input" type="checkbox" name="activa" value="true" id="edit_g_activa"><label class="form-check-label">Activa</label></div></div><div class="modal-footer"><button type="submit" class="btn btn-dark btn-sm">Actualizar</button></div></form></div></div>
+    <div class="modal fade" id="modalCurso" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form method="POST" class="modal-content">{% csrf_token %}<input type="hidden" name="action" value="guardar_curso"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Agregar Curso</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" class="form-control" required></div><div class="mb-3"><label class="form-label">Paralelo</label><input type="text" name="paralelo" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><input type="text" name="nivel" class="form-control" required></div></div><div class="modal-footer"><button type="submit" class="btn btn-dark btn-sm">Guardar</button></div></form></div></div>
+    <div class="modal fade" id="modalEditCurso" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form method="POST" class="modal-content">{% csrf_token %}<input type="hidden" name="action" value="editar_curso"><input type="hidden" name="id_curso" id="edit_c_id"><div class="modal-header bg-warning"><h5 class="modal-title">Editar Curso</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre" id="edit_c_nombre" class="form-control" required></div><div class="mb-3"><label class="form-label">Paralelo</label><input type="text" name="paralelo" id="edit_c_paralelo" class="form-control" required></div><div class="mb-3"><label class="form-label">Nivel</label><input type="text" name="nivel" id="edit_c_nivel" class="form-control" required></div></div><div class="modal-footer"><button type="submit" class="btn btn-dark btn-sm">Actualizar</button></div></form></div></div>
+    <div class="modal fade" id="modalMateria" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form method="POST" class="modal-content">{% csrf_token %}<input type="hidden" name="action" value="guardar_materia"><div class="modal-header bg-dark text-white"><h5 class="modal-title">Agregar Materia</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Nombre de la Asignatura</label><input type="text" name="nombre_materia" class="form-control" required></div></div><div class="modal-footer"><button type="submit" class="btn btn-dark btn-sm">Guardar</button></div></form></div></div>
+    <div class="modal fade" id="modalEditMateria" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered"><form method="POST" class="modal-content">{% csrf_token %}<input type="hidden" name="action" value="editar_materia"><input type="hidden" name="id_materia" id="edit_m_id"><div class="modal-header bg-warning"><h5 class="modal-title">Editar Materia</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="mb-3"><label class="form-label">Nombre</label><input type="text" name="nombre_materia" id="edit_m_nombre" class="form-control" required></div></div><div class="modal-footer"><button type="submit" class="btn btn-dark btn-sm">Actualizar</button></div></form></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/malla_curricular.js' %}"></script>
+</body>
+</html>

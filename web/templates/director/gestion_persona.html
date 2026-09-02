@@ -1,0 +1,377 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>UE Los Andes - Gestión de {{ config.titulo_modulo }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/gestion_personas.css">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="crud-container container-fluid">
+        
+        <div class="crud-header d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>
+                    <i class="bi {{ config.icono }} me-2" style="color: var(--director-blue);"></i>
+                    Gestión de {{ config.titulo_modulo }}
+                </h1>
+                <p class="text-muted">
+                    Administración activa de {{ config.titulo_modulo|lower }} registrados en el sistema institucional
+                </p>
+            </div>
+            <div>
+                <a href="/dashboard/" class="btn btn-outline-secondary me-2">
+                    <i class="bi bi-arrow-left-circle me-1"></i> Volver al Panel
+                </a>
+                <button class="btn btn-add px-4" data-bs-toggle="modal" data-bs-target="#modalCreatePersona">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Registrar {{ config.entidad_singular }}
+                </button>
+            </div>
+        </div>
+
+        <div class="row mb-4 g-3">
+            <div class="col-md-3">
+                <div class="ref-card shadow-sm border-start border-primary border-4">
+                    <span class="ref-label">{{ config.stat_label_1|default:"Total Registrados" }}</span>
+                    <div class="ref-value mt-1">
+                        {{ referencias.stat_1|default:"0" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="ref-card shadow-sm border-start border-success border-4">
+                    <span class="ref-label">{{ config.stat_label_2|default:"Hombres" }}</span>
+                    <div class="ref-value text-success mt-1">
+                        {{ referencias.stat_2|default:"0" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="ref-card shadow-sm border-start border-info border-4">
+                    <span class="ref-label">{{ config.stat_label_3|default:"Mujeres" }}</span>
+                    <div class="ref-value text-info mt-1">
+                        {{ referencias.stat_3|default:"0" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="ref-card shadow-sm border-start border-warning border-4">
+                    <span class="ref-label">{{ config.stat_label_4|default:"Atributo Clave" }}</span>
+                    <div class="ref-value text-warning mt-1">
+                        {{ referencias.stat_4|default:"0" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card data-card shadow-sm p-3 mb-4 bg-white">
+            <form method="GET" action="">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" name="search" class="form-control" placeholder="Buscar por DNI/Cédula, Nombres o Apellidos..." value="{{ search_query }}">
+                    <button type="submit" class="btn btn-secondary">Filtrar registros</button>
+                    {% if search_query %}
+                        <a href="{{ request.path }}" class="btn btn-outline-danger">Limpiar</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <div class="card data-card shadow-sm bg-white overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Perfil</th>
+                            <th>DNI / Cédula</th>
+                            <th>Nombres y Apellidos</th>
+                            <th>Género</th>
+                            <th>F. Nacimiento</th>
+                            <th>Teléfono</th>
+                            <th>{{ config.label_campo_extra }}</th>
+                            {% if config.slug == 'estudiantes' %}
+                                <th>Padres Asociados</th>
+                            {% endif %}
+                            <th class="text-center pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in listado %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="avatar-initials">
+                                    {{ item.persona_obj.nombres|slice:"0:1" }}{% if item.persona_obj.apellidos %}{{ item.persona_obj.apellidos|slice:"0:1" }}{% endif %}
+                                </div>
+                            </td>
+                            <td class="fw-semibold text-secondary">{{ item.persona_obj.dni_cedula }}</td>
+                            <td>{{ item.persona_obj.nombres }} {{ item.persona_obj.apellidos }}</td>
+                            <td>
+                                <span class="badge {% if item.persona_obj.genero == 'M' %}bg-info-subtle text-info{% else %}bg-danger-subtle text-danger{% endif %} px-3 py-2">
+                                    {{ item.persona_obj.genero }}
+                                </span>
+                            </td>
+                            <td>{{ item.persona_obj.fecha_nacimiento|date:"Y-m-d" }}</td>
+                            <td>{{ item.persona_obj.telefono|default:"---" }}</td>
+                            <td>
+                                <span class="badge bg-dark text-white rounded-pill px-3 py-2">
+                                    {{ item.valor_extra }}
+                                </span>
+                            </td>
+                            {% if config.slug == 'estudiantes' %}
+                            <td>
+                                <div class="sub-list-container">
+                                    {% if item.padres_relacionados %}
+                                        {% for pr in item.padres_relacionados %}
+                                            <div class="sub-list-item my-1">
+                                                <span>{{ pr.padre.id_persona.nombres }} {{ pr.padre.id_persona.apellidos }}</span>
+                                                <span class="badge bg-secondary text-white ms-1">{{ pr.parentesco }}</span>
+                                                {% if pr.es_tutor %}
+                                                    <span class="badge bg-success ms-1"><i class="bi bi-shield-check"></i></span>
+                                                {% endif %}
+                                            </div>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="text-muted small italic">Sin tutores asignados</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            {% endif %}
+                            <td class="text-center pe-4">
+                                <button class="btn btn-edit btn-sm me-1" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#modalEditPersona"
+                                        data-id-persona="{{ item.persona_obj.id_persona }}"
+                                        data-id-entidad="{{ item.id_entidad_pk }}"
+                                        data-dni="{{ item.persona_obj.dni_cedula }}"
+                                        data-nombres="{{ item.persona_obj.nombres }}"
+                                        data-apellidos="{{ item.persona_obj.apellidos }}"
+                                        data-genero="{{ item.persona_obj.genero }}"
+                                        data-fecha-nac="{{ item.persona_obj.fecha_nacimiento|date:'Y-m-d' }}"
+                                        data-telefono="{{ item.persona_obj.telefono|default:'' }}"
+                                        data-extra-val="{{ item.valor_extra }}"
+                                        data-json-padres="{{ item.json_padres_str|default:'[]' }}">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-delete btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalDeletePersona"
+                                        data-id-entidad="{{ item.id_entidad_pk }}"
+                                        data-nombres="{{ item.persona_obj.nombres }}"
+                                        data-apellidos="{{ item.persona_obj.apellidos }}">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-5">
+                                <i class="bi bi-folder-x display-4 block mb-2"></i><br>
+                                No se encontraron registros de {{ config.titulo_modulo }} en el sistema educativo.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCreatePersona" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form class="modal-content border-0 shadow" method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold"><i class="bi bi-person-plus me-2"></i>Registrar Nuevo {{ config.entidad_singular }}</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3 p-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">DNI / Cédula de Identidad</label>
+                        <input type="text" name="dni_cedula" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombres</label>
+                        <input type="text" name="nombres" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Apellidos</label>
+                        <input type="text" name="apellidos" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Género</label>
+                        <select name="genero" class="form-select" required>
+                            <option value="M">Masculino (M)</option>
+                            <option value="F">Femenino (F)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">F. Nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono de Contacto</label>
+                        <input type="text" name="telefono" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">{{ config.label_campo_extra }}</label>
+                        {% if config.options_campo_extra %}
+                            <select name="campo_extra" class="form-select" required>
+                                {% for opt in config.options_campo_extra %}
+                                    <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input type="text" name="campo_extra" class="form-control" placeholder="{{ config.placeholder_extra }}" required>
+                        {% endif %}
+                    </div>
+
+                    {% if config.slug == 'estudiantes' %}
+                    <div class="col-12 border-top pt-3 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 style="color: var(--director-blue);" class="fw-semibold mb-0"><i class="bi bi-people-fill me-1"></i>Vincular Padres / Apoderados</h6>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="agregarFilaPadreACrear()">
+                                <i class="bi bi-plus-lg"></i> Añadir Pariente
+                            </button>
+                        </div>
+                        <div id="crear_relaciones_padres_wrapper"></div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-add px-4">Guardar Datos</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditPersona" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <form class="modal-content border-0 shadow" method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update">
+                <input type="hidden" name="id_persona" id="edit_id_persona">
+                <input type="hidden" name="id_entidad" id="edit_id_entidad">
+                
+                <div class="modal-header" style="background: var(--director-light);">
+                    <h5 class="modal-title fw-semibold"><i class="bi bi-pencil-square me-2"></i>Modificar Datos del Registro</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body row g-3 p-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">DNI / Cédula de Identidad</label>
+                        <input type="text" name="dni_cedula" id="edit_dni_cedula" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nombres</label>
+                        <input type="text" name="nombres" id="edit_nombres" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Apellidos</label>
+                        <input type="text" name="apellidos" id="edit_apellidos" class="form-control" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Género</label>
+                        <select name="genero" id="edit_genero" class="form-select" required>
+                            <option value="M">M</option>
+                            <option value="F">F</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">F. Nacimiento</label>
+                        <input type="date" name="fecha_nacimiento" id="edit_fecha_nacimiento" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Teléfono de Contacto</label>
+                        <input type="text" name="telefono" id="edit_telefono" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">{{ config.label_campo_extra }}</label>
+                        {% if config.options_campo_extra %}
+                            <select name="campo_extra" id="edit_campo_extra" class="form-select" required>
+                                {% for opt in config.options_campo_extra %}
+                                    <option value="{{ opt }}">{{ opt }}</option>
+                                {% endfor %}
+                            </select>
+                        {% else %}
+                            <input type="text" name="campo_extra" id="edit_campo_extra" class="form-control" required>
+                        {% endif %}
+                    </div>
+
+                    {% if config.slug == 'estudiantes' %}
+                    <div class="col-12 border-top pt-3 mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 style="color: var(--director-blue);" class="fw-semibold mb-0"><i class="bi bi-people-fill me-1"></i>Modificar Padres / Apoderados Vinculados</h6>
+                            <button type="button" class="btn btn-sm btn-outline-warning text-dark" onclick="agregarFilaPadreAEditar()">
+                                <i class="bi bi-plus-lg"></i> Vincular Otro Padre
+                            </button>
+                        </div>
+                        <div id="edit_relaciones_padres_wrapper"></div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer bg-light border-0">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-add px-4">Aplicar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDeletePersona" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content border-0 shadow" method="POST" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id_entidad" id="delete_id_entidad">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-semibold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Remover Registro</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-4 px-4">
+                    <i class="bi bi-person-x-fill text-danger display-4 mb-3 d-block"></i>
+                    <p class="fs-5 mb-1">¿Estás seguro de remover a?</p>
+                    <h4 class="text-dark fw-semibold mb-3" id="delete_nombre_completo">---</h4>
+                    <p class="text-muted small">
+                        <strong>Atención:</strong> Esta acción ejecutará un borrado definitivo en la base de datos PostgreSQL, afectando los registros encadenados de esta persona.
+                    </p>
+                </div>
+                <div class="modal-footer bg-light border-0 justify-content-center">
+                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Abortar</button>
+                    <button type="submit" class="btn btn-danger px-4">Confirmar Baja</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if config.slug == 'estudiantes' %}
+    <select id="selector_padres_base" style="display: none;">
+        {% for padre in padres_disponibles %}
+            <option value="{{ padre.id_padre }}">{{ padre.id_persona.apellidos }}, {{ padre.id_persona.nombres }} ({{ padre.ocupacion|default:"Sin Ocupación" }})</option>
+        {% endfor %}
+    </select>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/gestion_personas.js"></script>
+</body>
+</html>

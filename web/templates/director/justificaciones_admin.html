@@ -1,0 +1,391 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Justificaciones - Panel Director</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{% static 'css/director_dashboard.css' %}">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        .dashboard-card {
+            border: none; border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
+            background: white; padding: 2rem;
+        }
+        .table th { background-color: #f1f5f9; color: #1e293b; font-weight: 600; }
+
+        /* ── Tarjetas resumen ── */
+        .resumen-card {
+            border-radius: 12px; padding: 1.1rem 1.3rem; color: #fff;
+            display: flex; align-items: center; gap: 14px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08);
+        }
+        .resumen-card .num { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+        .resumen-card .lbl { font-size: 0.78rem; opacity: .9; }
+        .resumen-card i { font-size: 1.6rem; opacity: .85; }
+        .rc-total      { background: linear-gradient(135deg,#1e3a8a,#3b5fd9); }
+        .rc-aprobado   { background: linear-gradient(135deg,#15803d,#22c55e); }
+        .rc-rechazado  { background: linear-gradient(135deg,#b91c1c,#ef4444); }
+        .rc-pendiente  { background: linear-gradient(135deg,#b45309,#f59e0b); }
+
+        /* ── Select de estado inline en la tabla ── */
+        .select-estado {
+            font-size: .78rem; font-weight: 700; border-radius: 20px;
+            padding: 3px 10px; border: 1px solid #dee2e6; cursor: pointer;
+        }
+        .select-estado.estado-APROBADO  { background:#dcfce7; color:#15803d; border-color:#86efac; }
+        .select-estado.estado-RECHAZADO { background:#fee2e2; color:#b91c1c; border-color:#fca5a5; }
+        .select-estado.estado-PENDIENTE { background:#fef3c7; color:#92400e; border-color:#fcd34d; }
+
+        .btn-guardar-fila { font-size: .72rem; padding: 3px 9px; display: none; }
+        .fila-editada .btn-guardar-fila { display: inline-block; }
+
+        .obs-corta { font-size: .76rem; color: #64748b; max-width: 230px;
+                     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display:block; }
+
+        .toast-flotante {
+            position: fixed; top: 20px; right: 20px; z-index: 2000; min-width: 260px;
+        }
+    </style>
+</head>
+<body>
+
+    {% include '../includes/navbar.html' %}
+
+    <div class="container-fluid py-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-dark">
+                    <i class="fa-solid fa-file-shield text-primary me-2"></i>Justificaciones e Inasistencias
+                </h1>
+                <p class="text-muted small mb-0">Revisión, validación biométrica y control de licencias/permisos</p>
+            </div>
+            <span class="badge bg-dark px-3 py-2 rounded-pill">{{ nombres }} · {{ nombre_rol }}</span>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Tarjetas resumen -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <a href="?estado=" class="text-decoration-none">
+                    <div class="resumen-card rc-total">
+                        <i class="fa-solid fa-folder-open"></i>
+                        <div><div class="num">{{ total }}</div><div class="lbl">Total registrados</div></div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="?estado=APROBADO" class="text-decoration-none">
+                    <div class="resumen-card rc-aprobado">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <div><div class="num">{{ total_aprobados }}</div><div class="lbl">Aprobados</div></div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="?estado=RECHAZADO" class="text-decoration-none">
+                    <div class="resumen-card rc-rechazado">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                        <div><div class="num">{{ total_rechazados }}</div><div class="lbl">Rechazados</div></div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="?estado=PENDIENTE" class="text-decoration-none">
+                    <div class="resumen-card rc-pendiente">
+                        <i class="fa-solid fa-clock"></i>
+                        <div><div class="num">{{ total_pendientes }}</div><div class="lbl">Pendientes</div></div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="card dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-muted mb-0">
+                    <i class="fa-solid fa-filter me-1"></i>
+                    {% if estado_filtro %}Filtrando por: <span class="text-primary">{{ estado_filtro }}</span>
+                    {% else %}Mostrando todos los registros{% endif %}
+                </h6>
+                {% if estado_filtro %}
+                    <a href="?estado=" class="btn btn-sm btn-outline-secondary rounded-pill">
+                        <i class="fa-solid fa-rotate-left me-1"></i>Quitar filtro
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="tablaJustificaciones">
+                    <thead>
+                        <tr class="text-center">
+                            <th class="text-start">Estudiante / Apoderado</th>
+                            <th>Motivo / Tipo</th>
+                            <th>Fecha Evento</th>
+                            <th>Fecha Registro</th>
+                            <th>Modo</th>
+                            <th>Estado</th>
+                            <th>Documentos</th>
+                            <th>Detalle</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in historial %}
+                        <tr id="fila-doc-{{ doc.id_documento }}" data-id="{{ doc.id_documento }}">
+                            <td>
+                                <div class="fw-bold text-dark">{{ doc.id_estudiante.id_persona.nombres }} {{ doc.id_estudiante.id_persona.apellidos }}</div>
+                                <div class="small text-muted">
+                                    <i class="fa-solid fa-user-shield me-1"></i>
+                                    {{ doc.id_padre.id_persona.nombres }} {{ doc.id_padre.id_persona.apellidos }}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="small">{{ doc.motivo }}</span>
+                            </td>
+                            <td class="text-center"><i class="fa-regular fa-calendar me-1"></i>{{ doc.fecha_inicio|date:"d/m/Y" }}</td>
+                            <td class="text-center">
+                                <span class="badge bg-light text-dark border">{{ doc.fecha_subida|date:"d/m/Y H:i" }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if doc.es_adjunto %}
+                                    <span class="badge bg-secondary"><i class="fa-solid fa-paperclip me-1"></i>Adjunto</span>
+                                {% else %}
+                                    <span class="badge bg-primary"><i class="fa-solid fa-camera me-1"></i>Biométrico</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <select class="select-estado estado-{{ doc.estado }}"
+                                        data-original="{{ doc.estado }}"
+                                        onchange="marcarFilaEditada(this)">
+                                    <option value="APROBADO"  {% if doc.estado == 'APROBADO' %}selected{% endif %}>APROBADO</option>
+                                    <option value="RECHAZADO" {% if doc.estado == 'RECHAZADO' %}selected{% endif %}>RECHAZADO</option>
+                                    <option value="PENDIENTE" {% if doc.estado == 'PENDIENTE' %}selected{% endif %}>PENDIENTE</option>
+                                </select>
+                                <br>
+                                <button type="button" class="btn btn-dark btn-guardar-fila mt-1"
+                                        onclick="guardarEstado({{ doc.id_documento }}, this)">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i>Guardar
+                                </button>
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group btn-group-sm">
+                                    {% if doc.es_adjunto %}
+                                        <a href="{% get_static_prefix %}{{ doc.adjunto_limpio }}" target="_blank" class="btn btn-outline-primary">
+                                            <i class="bi bi-paperclip me-1"></i>Ver Documento
+                                        </a>
+                                    {% else %}
+                                        {% if doc.pdf_limpio %}
+                                        <a href="{% get_static_prefix %}{{ doc.pdf_limpio }}" target="_blank" class="btn btn-outline-danger" title="PDF">
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if doc.firma_limpia %}
+                                        <a href="{% get_static_prefix %}{{ doc.firma_limpia }}" target="_blank" class="btn btn-outline-secondary" title="Firma">
+                                            <i class="fa-solid fa-signature"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if doc.foto_limpia %}
+                                        <a href="{% get_static_prefix %}{{ doc.foto_limpia }}" target="_blank" class="btn btn-outline-secondary" title="Foto">
+                                            <i class="fa-solid fa-image-portrait"></i>
+                                        </a>
+                                        {% endif %}
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-outline-dark rounded-pill"
+                                        onclick="abrirDetalle({{ doc.id_documento }})"
+                                        data-estudiante="{{ doc.id_estudiante.id_persona.nombres }} {{ doc.id_estudiante.id_persona.apellidos }}"
+                                        data-padre="{{ doc.id_padre.id_persona.nombres }} {{ doc.id_padre.id_persona.apellidos }}"
+                                        data-motivo="{{ doc.motivo }}"
+                                        data-fecha="{{ doc.fecha_inicio|date:'d/m/Y' }}"
+                                        data-registro="{{ doc.fecha_subida|date:'d/m/Y H:i' }}"
+                                        data-modo="{% if doc.es_adjunto %}Documento Adjunto{% else %}Formulario Biométrico{% endif %}"
+                                        data-estado="{{ doc.estado }}"
+                                        data-obs="{{ doc.observaciones|default:'Sin observaciones registradas.' }}">
+                                    <i class="fa-solid fa-circle-info"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted small">
+                                No hay justificaciones registradas{% if estado_filtro %} con el estado "{{ estado_filtro }}"{% endif %}.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===========================================================
+         MODAL DE DETALLE
+    ============================================================ -->
+    <div class="modal fade" id="modalDetalle" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-circle-info me-2"></i>Detalle del Trámite</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <span class="text-muted small d-block">Estudiante</span>
+                            <span class="fw-bold" id="detEstudiante">-</span>
+                        </div>
+                        <div class="col-md-6">
+                            <span class="text-muted small d-block">Padre / Apoderado</span>
+                            <span class="fw-bold" id="detPadre">-</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Fecha del Evento</span>
+                            <span class="fw-bold" id="detFecha">-</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Fecha de Registro</span>
+                            <span class="fw-bold" id="detRegistro">-</span>
+                        </div>
+                        <div class="col-md-4">
+                            <span class="text-muted small d-block">Modo de Envío</span>
+                            <span class="fw-bold" id="detModo">-</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small d-block">Motivo</span>
+                            <span class="fw-bold" id="detMotivo">-</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small d-block mb-1">Estado actual</span>
+                            <span class="badge fs-6" id="detEstadoBadge">-</span>
+                        </div>
+                        <div class="col-12">
+                            <span class="text-muted small d-block mb-1">
+                                <i class="fa-solid fa-robot me-1"></i>Observación / Resultado del Motor de IA
+                            </span>
+                            <pre class="bg-light border rounded p-3 small mb-0" id="detObservaciones"
+                                 style="white-space: pre-wrap; font-family: inherit;">-</pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenedor de notificaciones flotantes (toasts) -->
+    <div class="toast-flotante" id="contenedorToast"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const CSRF_TOKEN = "{{ csrf_token }}";
+        const URL_ACTUALIZAR_ESTADO = "{% url 'actualizar_estado_justificacion' %}";
+
+        // ── Modal de detalle: se llena con los data-* del botón "Ver" ──────
+        function abrirDetalle(idDocumento) {
+            const btn = document.querySelector(
+                `button[onclick="abrirDetalle(${idDocumento})"]`
+            );
+            if (!btn) return;
+
+            document.getElementById('detEstudiante').textContent  = btn.dataset.estudiante;
+            document.getElementById('detPadre').textContent       = btn.dataset.padre;
+            document.getElementById('detFecha').textContent       = btn.dataset.fecha;
+            document.getElementById('detRegistro').textContent    = btn.dataset.registro;
+            document.getElementById('detModo').textContent        = btn.dataset.modo;
+            document.getElementById('detMotivo').textContent      = btn.dataset.motivo;
+            document.getElementById('detObservaciones').textContent = btn.dataset.obs;
+
+            const badge = document.getElementById('detEstadoBadge');
+            badge.textContent = btn.dataset.estado;
+            badge.className = 'badge fs-6 ' + claseBadgeEstado(btn.dataset.estado);
+
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalle')).show();
+        }
+
+        function claseBadgeEstado(estado) {
+            if (estado === 'APROBADO')  return 'bg-success';
+            if (estado === 'RECHAZADO') return 'bg-danger';
+            return 'bg-warning text-dark';
+        }
+
+        // ── Mostrar botón "Guardar" cuando se cambia el select de una fila ──
+        function marcarFilaEditada(select) {
+            const fila = select.closest('tr');
+            fila.classList.add('fila-editada');
+            select.className = 'select-estado estado-' + select.value;
+        }
+
+        // ── Guardar el nuevo estado vía AJAX (sin recargar la página) ───────
+        function guardarEstado(idDocumento, btnGuardar) {
+            const fila   = document.getElementById(`fila-doc-${idDocumento}`);
+            const select = fila.querySelector('.select-estado');
+            const nuevoEstado = select.value;
+
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+            fetch(URL_ACTUALIZAR_ESTADO, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CSRF_TOKEN,
+                },
+                body: JSON.stringify({
+                    id_documento: idDocumento,
+                    nuevo_estado: nuevoEstado,
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.ok) {
+                    mostrarToast(data.error || 'No se pudo actualizar.', 'danger');
+                    return;
+                }
+                select.dataset.original = data.estado;
+                fila.classList.remove('fila-editada');
+
+                // Actualizar también el botón "Ver detalle" con la nueva observación/estado
+                const btnVer = fila.querySelector('button[onclick^="abrirDetalle"]');
+                if (btnVer) {
+                    btnVer.dataset.estado = data.estado;
+                    btnVer.dataset.obs    = data.observaciones;
+                }
+
+                mostrarToast(`Estado actualizado a ${data.estado}.`, 'success');
+            })
+            .catch(() => mostrarToast('Error de conexión al actualizar.', 'danger'))
+            .finally(() => {
+                btnGuardar.disabled = false;
+                btnGuardar.innerHTML = '<i class="fa-solid fa-floppy-disk me-1"></i>Guardar';
+            });
+        }
+
+        // ── Notificación flotante simple (sin recargar nada) ────────────────
+        function mostrarToast(mensaje, tipo) {
+            const cont = document.getElementById('contenedorToast');
+            const div = document.createElement('div');
+            div.className = `alert alert-${tipo} shadow-sm`;
+            div.innerHTML = mensaje;
+            cont.appendChild(div);
+            setTimeout(() => div.remove(), 3500);
+        }
+    </script>
+</body>
+</html>

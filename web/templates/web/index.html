@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UE Los Andes - Dashboard Informativo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/index_dashboard.css' %}">
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark-navy sticky-top">
+        <div class="container">
+            <a class="navbar-brand font-weight-bold" href="#">
+                <i class="fas fa-graduation-cap me-2"></i>UE Los Andes
+            </a>
+            <button class="navbar-dark navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link active me-3" href="#modulos">Módulos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link me-3" href="#metricas">Estadísticas</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/login/" class="btn btn-login-nav px-4">
+                            <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-dashboard py-5 text-center text-white">
+        <div class="container py-4">
+            <h1 class="display-4 fw-bold">Sistema De Seguimiento y Control Academica Estudiantil</h1>
+            <p class="lead mx-auto text-muted-light" style="max-width: 700px;">
+                Una solución orientada a objetos desarrollada para el seguimiento y el control académico automatizado de la Unidad Educativa Los Andes.
+            </p>
+        </div>
+    </header>
+
+    <section id="metricas" class="container text-center mb-5">
+        <div class="row g-4 dashboard-counters">
+            <div class="col-md-4">
+                <div class="counter-card p-4">
+                    <i class="fas fa-user-graduate mb-2 text-primary-blue"></i>
+                    <h3 class="fw-bold text-navy" id="count-estudiantes">0</h3>
+                    <p class="text-muted mb-0">Estudiantes Activos</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="counter-card p-4">
+                    <i class="fas fa-chalkboard-teacher mb-2 text-primary-blue"></i>
+                    <h3 class="fw-bold text-navy" id="count-maestros">0</h3>
+                    <p class="text-muted mb-0">Docentes Calificados</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="counter-card p-4">
+                    <i class="fas fa-book mb-2 text-primary-blue"></i>
+                    <h3 class="fw-bold text-navy" id="count-materias">0</h3>
+                    <p class="text-muted mb-0">Asignaturas Registradas</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="modulos" class="container mb-5">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold text-navy">Módulos Incorporados</h2>
+            <p class="text-muted">Explora los pilares funcionales de la arquitectura de nuestra plataforma</p>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="feature-card-new p-4 h-100">
+                    <div class="icon-wrapper mb-3"><i class="fas fa-id-card"></i></div>
+                    <h4>Control de Personal</h4>
+                    <p class="text-muted small">Gestión unificada de registros mediante herencia de clases para Personas, Administrativos, Maestros y Alumnos.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card-new p-4 h-100">
+                    <div class="icon-wrapper mb-3"><i class="fas fa-calendar-alt"></i></div>
+                    <h4>Horarios y Asistencias</h4>
+                    <p class="text-muted small">Planificación estructural de asignaturas por aulas, días de la semana y control diario automatizado de estados.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="feature-card-new p-4 h-100">
+                    <div class="icon-wrapper mb-3"><i class="fas fa-tasks"></i></div>
+                    <h4>Tareas y Entregas</h4>
+                    <p class="text-muted small">Flujo completo para la asignación de evaluaciones por parte de docentes y el seguimiento/calificación del estudiante.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="bg-dark text-white text-center py-4 mt-auto">
+        <div class="container">
+            <p class="mb-1">&copy; 2026 UE Los Andes - Todos los derechos reservados</p>
+            <p class="text-muted small mb-0">Infraestructura Tecnológica Basada en Python & PostgreSQL</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/index_dashboard.js' %}"></script>
+</body>
+</html>

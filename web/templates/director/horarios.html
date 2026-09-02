@@ -1,0 +1,330 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Horarios - UE Los Andes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/gestion_horarios.css' %}">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="crud-container">
+        <div class="container-fluid">
+
+            <div class="crud-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-clock"></i> Gestión de Horarios de Clases</h1>
+                    <p class="text-muted">Administra los horarios de maestros, materias y aulas del sistema</p>
+                </div>
+                <button class="btn btn-add-horario shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateHorario">
+                    <i class="fas fa-plus-circle me-1"></i> Crear Nuevo Horario
+                </button>
+            </div>
+
+            <!-- Tarjetas de Estadísticas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-primary border-4">
+                        <span class="ref-label">Total de Horarios</span>
+                        <div class="ref-value">{{ stats.total_horarios }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-success border-4">
+                        <span class="ref-label">Maestros Asignados</span>
+                        <div class="ref-value text-success">{{ stats.maestros_asignados }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-info border-4">
+                        <span class="ref-label">Materias Programadas</span>
+                        <div class="ref-value text-info">{{ stats.materias_programadas }}</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="ref-card shadow-sm border-start border-warning border-4">
+                        <span class="ref-label">Horarios en Sistema</span>
+                        <div class="ref-value text-warning">{{ stats.horarios_activos }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Caja de Búsqueda y Filtros -->
+            <div class="card p-3 mb-4 shadow-sm search-box-card">
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-6">
+                        <form method="GET" action="{% url 'gestion_horarios' %}" class="d-flex gap-2 w-100">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0" name="search"
+                                    value="{{ search_query }}"
+                                    placeholder="Buscar por maestro, materia o aula...">
+                            </div>
+                            <button type="submit" class="btn btn-search fw-bold px-4">Buscar</button>
+                            {% if search_query %}
+                            <a href="{% url 'gestion_horarios' %}" class="btn btn-outline-secondary"
+                                title="Limpiar Filtros"><i class="fas fa-sync-alt"></i></a>
+                            {% endif %}
+                        </form>
+                    </div>
+
+                    <div class="col-md-6 d-flex justify-content-end gap-2">
+                        <select class="form-select form-select-sm w-auto" id="filtro_dia" name="dia">
+                            <option value="">Todos los días</option>
+                            <option value="LUNES" {% if filtro_dia == 'LUNES' %}selected{% endif %}>Lunes</option>
+                            <option value="MARTES" {% if filtro_dia == 'MARTES' %}selected{% endif %}>Martes</option>
+                            <option value="MIERCOLES" {% if filtro_dia == 'MIERCOLES' %}selected{% endif %}>Miércoles</option>
+                            <option value="JUEVES" {% if filtro_dia == 'JUEVES' %}selected{% endif %}>Jueves</option>
+                            <option value="VIERNES" {% if filtro_dia == 'VIERNES' %}selected{% endif %}>Viernes</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mensajes de Feedback -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'info' %}primary{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- Tabla de Horarios -->
+            <div class="card data-card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Maestro</th>
+                                <th>Materia</th>
+                                <th>Día</th>
+                                <th>Horario</th>
+                                <th>Aula</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for horario in horarios %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-initials me-3">
+                                            {{ horario.id_maestro.id_persona.nombres|slice:":1" }}{{ horario.id_maestro.id_persona.apellidos|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-dark fw-bold">
+                                                {{ horario.id_maestro.id_persona.nombres }} {{ horario.id_maestro.id_persona.apellidos }}
+                                            </h6>
+                                            <small class="text-muted">{{ horario.id_maestro.especialidad }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ horario.id_materia.nombre_materia }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-info">{{ horario.dia_semana }}</span>
+                                </td>
+                                <td>
+                                    <code class="time-code">{{ horario.hora_inicio|time:"H:i" }} - {{ horario.hora_fin|time:"H:i" }}</code>
+                                </td>
+                                <td>
+                                    <strong>{{ horario.aula }}</strong>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group gap-2">
+                                        <button type="button" class="btn btn-action btn-edit" data-bs-toggle="modal"
+                                            data-bs-target="#modalEditHorario" data-id="{{ horario.id_horario }}"
+                                            data-maestro="{{ horario.id_maestro.id_maestro }}"
+                                            data-materia="{{ horario.id_materia.id_materia }}"
+                                            data-dia="{{ horario.dia_semana }}"
+                                            data-inicio="{{ horario.hora_inicio }}"
+                                            data-fin="{{ horario.hora_fin }}"
+                                            data-aula="{{ horario.aula }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-action btn-hard-delete" data-bs-toggle="modal"
+                                            data-bs-target="#modalDeleteHorario" data-id="{{ horario.id_horario }}"
+                                            data-materia="{{ horario.id_materia.nombre_materia }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-search-minus display-4 mb-3 d-block text-secondary"></i>
+                                    No se encontraron horarios que coincidan con tu búsqueda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Modal: Crear Horario -->
+    <div class="modal fade" id="modalCreateHorario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-clock me-2"></i> Crear Nuevo Horario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'gestion_horarios' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Maestro</label>
+                            <select class="form-select" name="id_maestro" id="create_maestro" required>
+                                <option value="" disabled selected>-- Seleccione Maestro --</option>
+                                {% for maestro in maestros %}
+                                <option value="{{ maestro.id_maestro }}">
+                                    {{ maestro.id_persona.nombres }} {{ maestro.id_persona.apellidos }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Materia</label>
+                            <select class="form-select" name="id_materia" required>
+                                <option value="" disabled selected>-- Seleccione Materia --</option>
+                                {% for materia in materias %}
+                                <option value="{{ materia.id_materia }}">{{ materia.nombre_materia }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Día de la Semana</label>
+                            <select class="form-select" name="dia_semana" required>
+                                <option value="" disabled selected>-- Seleccione Día --</option>
+                                {% for codigo, label in dias_semana %}
+                                <option value="{{ codigo }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Hora Inicio</label>
+                                <input type="time" class="form-control" name="hora_inicio" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Hora Fin</label>
+                                <input type="time" class="form-control" name="hora_fin" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Aula/Salón</label>
+                            <input type="text" class="form-control" name="aula" placeholder="Ej: 3A, Laboratorio 1" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">Crear Horario</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Horario -->
+    <div class="modal fade" id="modalEditHorario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> Editar Horario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'gestion_horarios' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id_horario" id="edit_id_horario">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Maestro</label>
+                            <select class="form-select" name="id_maestro" id="edit_maestro" required>
+                                {% for maestro in maestros %}
+                                <option value="{{ maestro.id_maestro }}">
+                                    {{ maestro.id_persona.nombres }} {{ maestro.id_persona.apellidos }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Materia</label>
+                            <select class="form-select" name="id_materia" id="edit_materia" required>
+                                {% for materia in materias %}
+                                <option value="{{ materia.id_materia }}">{{ materia.nombre_materia }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Día de la Semana</label>
+                            <select class="form-select" name="dia_semana" id="edit_dia" required>
+                                {% for codigo, label in dias_semana %}
+                                <option value="{{ codigo }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Hora Inicio</label>
+                                <input type="time" class="form-control" name="hora_inicio" id="edit_inicio" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Hora Fin</label>
+                                <input type="time" class="form-control" name="hora_fin" id="edit_fin" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Aula/Salón</label>
+                            <input type="text" class="form-control" name="aula" id="edit_aula" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-dark px-4">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Eliminar Horario -->
+    <div class="modal fade" id="modalDeleteHorario" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-exclamation-triangle text-danger display-4 mb-3"></i>
+                    <h4 class="fw-bold text-danger">¿Eliminar este Horario?</h4>
+                    <p class="text-muted">Se eliminará el horario de <b id="delete_materia" class="text-dark"></b> de la base de datos permanentemente.</p>
+                    <form method="POST" action="{% url 'gestion_horarios' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="hard_delete">
+                        <input type="hidden" name="id_horario" id="delete_id_horario">
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger px-4 fw-bold">Sí, Eliminar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/gestion_horarios.js' %}"></script>
+</body>
+</html>

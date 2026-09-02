@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>SGE | Reportes de Calificaciones</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-main: #f4f6f9; --surface: #ffffff; --primary: #2c3e50;
+            --accent: #3498db; --success: #2ecc71; --danger: #e74c3c; --text: #333;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: var(--bg-main); color: var(--text); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .user-badge { background: var(--primary); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: var(--surface); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 5px solid var(--accent); }
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.danger { border-left-color: var(--danger); }
+        .stat-card h3 { font-size: 12px; text-transform: uppercase; color: #7f8c8d; margin-bottom: 8px; }
+        .stat-card p { font-size: 28px; font-weight: bold; color: var(--primary); }
+
+        .analytics-section { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 24px; }
+        .panel { background: var(--surface); padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .filter-bar { background: var(--surface); padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        select, input { padding: 10px; border: 1px solid #ddd; border-radius: 8px; outline: none; font-size: 14px; }
+        .btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; text-decoration: none;}
+        .btn:hover { opacity: 0.9; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; color: var(--primary); font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .badge.aprobado { background: #e8f8f5; color: var(--success); }
+        .badge.reprobado { background: #fdedec; color: var(--danger); }
+    </style>
+</head>
+<body>
+ {% include 'includes/navbar.html' %}
+<div class="container-fluid">
+    <div class="header pt-4">
+        <div>
+            <h1><i class="fas fa-star" style="color: #f1c40f;"></i> Reportes de Calificaciones</h1>
+            <p style="color: #7f8c8d;">Consola de supervisión del rendimiento académico general</p>
+        </div>
+        <div class="user-badge">
+            <i class="fas fa-user-shield"></i> {{ nombres }} | <span style="text-transform: uppercase; font-weight:bold;">{{ nombre_rol }}</span>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Promedio Institucional</h3>
+            <p>{{ kpis.promedio }} / 100</p>
+        </div>
+        <div class="stat-card success">
+            <h3>Tasa de Aprobación</h3>
+            <p>{{ kpis.pct_aprobados }}%</p>
+        </div>
+        <div class="stat-card danger">
+            <h3>Tasa de Reprobación</h3>
+            <p>{{ kpis.pct_reprobados }}%</p>
+        </div>
+        <div class="stat-card">
+            <h3>Evaluaciones Procesadas</h3>
+            <p>{{ kpis.total_registros }}</p>
+        </div>
+    </div>
+
+    <div class="analytics-section">
+        <div class="panel">
+            <h2>Rendimiento por Curso</h2>
+            <p style="font-size:12px; color:#7f8c8d; margin-bottom: 15px;">Selecciona un curso para evaluar sus promedios por asignatura</p>
+            <select id="selectorCursoChart" style="width: 100%; margin-bottom: 15px;">
+                <option value="">-- Seleccionar Curso --</option>
+                {% for c in cursos %}
+                <option value="{{ c.id_curso }}">{{ c.nombre }} {{ c.paralelo }}</option>
+                {% endfor %}
+            </select>
+            <canvas id="rendimientoChart" style="max-height: 220px;"></canvas>
+        </div>
+
+        <div class="panel">
+            <h2>Historial de Calificaciones Recientes</h2>
+            
+            <form method="GET" class="filter-bar" style="box-shadow: none; padding: 15px 0 0 0;">
+                <select name="curso">
+                    <option value="">Todos los Cursos</option>
+                    {% for c in cursos %}
+                    <option value="{{ c.id_curso }}" {% if filtro_curso == c.id_curso|stringformat:"i" %}selected{% endif %}>{{ c.nombre }} {{ c.paralelo }}</option>
+                    {% endfor %}
+                </select>
+                <select name="materia">
+                    <option value="">Todas las Materias</option>
+                    {% for m in materias %}
+                    <option value="{{ m.id_materia }}" {% if filtro_materia == m.id_materia|stringformat:"i" %}selected{% endif %}>{{ m.nombre_materia }}</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="search" placeholder="Buscar estudiante..." value="{{ search_query }}">
+                <button type="submit" class="btn"><i class="fas fa-filter"></i> Filtrar</button>
+                <a href="{% url 'director_calificaciones' %}" class="btn" style="background:#95a5a6;"><i class="fas fa-undo"></i></a>
+            </form>
+
+            <div style="max-height: 320px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Estudiante</th>
+                            <th>Materia</th>
+                            <th>Tarea</th>
+                            <th>Nota</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for e in entregas %}
+                        <tr>
+                            <td><strong>{{ e.id_estudiante.id_persona.apellidos }}, {{ e.id_estudiante.id_persona.nombres }}</strong></td>
+                            <td>{{ e.id_tarea.id_materia.nombre_materia }}</td>
+                            <td>{{ e.id_tarea.titulo }}</td>
+                            <td><span style="font-size:16px; font-weight:bold;">{{ e.calificacion }}</span></td>
+                            <td>
+                                {% if e.calificacion >= 51 %}
+                                <span class="badge aprobado">Aprobado</span>
+                                {% else %}
+                                <span class="badge reprobado">Reprobado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; color: #95a5a6; padding: 30px;">No se encontraron registros.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const ctx = document.getElementById('rendimientoChart').getContext('2d');
+        let rendimientoChart = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: ['Seleccione Curso'], datasets: [{ label: 'Promedio de Notas', data: [0], backgroundColor: '#3498db' }] },
+            options: { responsive: true, scales: { y: { min: 0, max: 100 } } }
+        });
+
+        document.getElementById('selectorCursoChart').addEventListener('change', function() {
+            let idCurso = this.value;
+            if(!idCurso) return;
+
+            fetch(`/api/director/calificaciones/curso/${idCurso}/`)
+                .then(response => response.json())
+                .then(data => {
+                    let labels = Object.keys(data.rendimiento);
+                    let valores = Object.values(data.rendimiento);
+
+                    rendimientoChart.data.labels = labels.length ? labels : ['Sin Datos'];
+                    rendimientoChart.data.datasets[0].data = valores.length ? valores : [0];
+                    rendimientoChart.update();
+                });
+        });
+    </script>
+</div>
+</body>
+</html>

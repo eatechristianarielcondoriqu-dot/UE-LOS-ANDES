@@ -1,0 +1,231 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asignación de Personal Docente</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .dashboard-card { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05); background: white; padding: 2rem; }
+        .table th { background-color: #f1f5f9; color: #1e293b; font-weight: 600; }
+    </style>
+</head>
+<body>
+    {% include '../includes/navbar.html' %}
+    <div class="container-fluid py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h1 class="h3 mb-1 fw-bold text-slate-800"><i class="fa-solid fa-chalkboard-user text-primary me-2"></i>Asignación de Docentes</h1>
+                <p class="text-muted small mb-0">Distribución de Cátedras y Descarga de Reportes Oficiales</p>
+            </div>
+            
+            <form method="GET" class="d-flex align-items-center gap-2">
+                <label class="fw-bold text-secondary text-nowrap mb-0">Gestión Activa:</label>
+                <select name="gestion_id" class="form-select form-select-sm bg-light" onchange="this.form.submit()">
+                    {% for g in gestiones %}
+                        <option value="{{ g.id_gestion }}" {% if g.id_gestion == gestion_activa.id_gestion %}selected{% endif %}>
+                            {{ g.anio }} {% if g.activa %}(Actual){% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex gap-2">
+                    <button class="btn btn-primary rounded-pill px-3 btn-sm" id="btnAbrirAsignacion" data-bs-toggle="modal" data-bs-target="#modalAsignarDocente">
+                        <i class="fa-solid fa-plus me-1"></i> Nueva Asignación
+                    </button>
+                    <a href="{% url 'pdf_malla_general' id_gestion=gestion_activa.id_gestion %}" class="btn btn-danger rounded-pill px-3 btn-sm">
+                        <i class="fa-solid fa-file-pdf me-1"></i> Exportar General PDF
+                    </a>
+                </div>
+                <span class="badge bg-dark px-3 py-2 rounded-pill">Gestión: {{ gestion_activa.anio }}</span>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle">
+                    <thead>
+                        <tr class="text-center">
+                            <th style="width: 25%;">Curso / Paralelo</th>
+                            <th style="width: 60%;">Asignaturas & Docentes Designados</th>
+                            <th style="width: 15%;">Reporte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in matriz_malla %}
+                            <tr>
+                                <td class="ps-3">
+                                    <div class="fw-bold text-dark">{{ item.curso.nombre }} "{{ item.curso.paralelo }}"</div>
+                                    <small class="text-muted text-uppercase font-monospace" style="font-size: 0.75rem;">{{ item.curso.nivel }}</small>
+                                </td>
+                                <td class="p-3">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for celda in item.fila %}
+                                            <span class="badge bg-light text-dark border d-flex align-items-center gap-2 py-2 px-3 shadow-sm rounded-pill">
+                                                <i class="fa-solid fa-book-bookmark text-primary small"></i>
+                                                <span><strong>{{ celda.materia.nombre_materia }}:</strong> {{ celda.maestro.id_persona.nombres }} {{ celda.maestro.id_persona.apellidos }}</span>
+                                                <button type="button" class="btn-close btn-del-asig" 
+                                                        style="font-size: 0.65rem;"
+                                                        data-id="{{ celda.id_asignacion }}"
+                                                        data-info="{{ celda.materia.nombre_materia }} - Prof. {{ celda.maestro.id_persona.nombres }}" 
+                                                        title="Eliminar asignación"></button>
+                                            </span>
+                                        {% empty %}
+                                            <span class="text-muted small my-1 italic"><i class="fa-solid fa-circle-info me-1 text-secondary"></i> Sin docentes asignados para esta gestión</span>
+                                        {% endfor %}
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'pdf_malla_curso' id_curso=item.curso.id_curso id_gestion=gestion_activa.id_gestion %}" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                                        <i class="fa-solid fa-file-pdf me-1"></i> Descargar
+                                    </a>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No existen cursos para desplegar.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAsignarDocente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="POST" class="modal-content">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="crear_asignacion">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-link me-2"></i>Asignar Materia a Docente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Curso</label>
+                        <select name="id_curso" id="selectCurso" class="form-select" required>
+                            <option value="" disabled selected>-- Seleccione un Curso --</option>
+                            {% for c in cursos %}
+                                <option value="{{ c.id_curso }}">{{ c.nombre }} "{{ c.paralelo }}" ({{ c.nivel }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Materia / Asignatura disponible</label>
+                        <select name="id_materia" id="selectMateria" class="form-select" required disabled>
+                            <option value="">Primero elija un curso...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Docente Responsable</label>
+                        <select name="id_maestro" class="form-select" required>
+                            {% for doc in maestros %}
+                                <option value="{{ doc.id_maestro }}">{{ doc.id_persona.nombres }} {{ doc.id_persona.paterno }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Confirmar Designación</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfirmarAccion" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <form method="POST" class="modal-content">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="eliminar_asignacion">
+                <input type="hidden" name="id_asignacion" id="inputTarget">
+                <div class="modal-header bg-danger text-white py-2">
+                    <h6 class="modal-title fw-bold">Confirmar Eliminación</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center py-3">
+                    <p class="small mb-2">¿Está seguro de remover esta designación docente?</p>
+                    <p id="textInfo" class="fw-bold text-dark small bg-light p-2 rounded border"></p>
+                </div>
+                <div class="modal-footer py-1 d-flex justify-content-between">
+                    <button type="button" class="btn btn-light btn-sm border" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const modalDel = new bootstrap.Modal(document.getElementById('modalConfirmarAccion'));
+            const inputTarget = document.getElementById('inputTarget');
+            const textInfo = document.getElementById('textInfo');
+
+            const selectCurso = document.getElementById('selectCurso');
+            const selectMateria = document.getElementById('selectMateria');
+
+            // JavaScript reactivo para filtrar materias disponibles en tiempo real
+            selectCurso.addEventListener('change', function() {
+                const cursoId = this.value;
+                if (!cursoId) return;
+
+                selectMateria.innerHTML = '<option value="">Cargando materias válidas...</option>';
+                selectMateria.disabled = true;
+
+                fetch(`/director/asignacion-maestros/api/materias-disponibles/?id_curso=${cursoId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        selectMateria.innerHTML = '';
+                        if (data.materias.length === 0) {
+                            selectMateria.innerHTML = '<option value="">⚠️ No hay materias disponibles (Asigne en Malla primero)</option>';
+                            selectMateria.disabled = true;
+                        } else {
+                            data.materias.forEach(mat => {
+                                const opt = document.createElement('option');
+                                opt.value = mat.id_materia;
+                                opt.textContent = mat.nombre_materia;
+                                selectMateria.appendChild(opt);
+                            });
+                            selectMateria.disabled = false;
+                        }
+                    })
+                    .catch(() => {
+                        selectMateria.innerHTML = '<option value="">Error al cargar datos.</option>';
+                    });
+            });
+
+            // Reseteo del selector cuando se abre el modal
+            document.getElementById('btnAbrirAsignacion').addEventListener('click', function() {
+                selectCurso.value = "";
+                selectMateria.innerHTML = '<option value="">Primero elija un curso...</option>';
+                selectMateria.disabled = true;
+            });
+
+            document.querySelectorAll('.btn-del-asig').forEach(b => {
+                b.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    inputTarget.value = this.dataset.id;
+                    textInfo.innerText = this.dataset.info;
+                    modalDel.show();
+                });
+            });
+        });
+    </script>
+</body>
+</html>

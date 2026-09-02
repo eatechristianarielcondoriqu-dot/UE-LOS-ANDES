@@ -1,0 +1,29 @@
+<nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/dashboard/">
+            <i class="fas fa-graduation-cap"></i> UE Los Andes
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <span class="nav-link text-white">
+                        <i class="fas fa-user-circle"></i> {{ nombres }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <span class="nav-link text-white" style="font-size: 0.85rem;">
+                        <i class="fas fa-tag"></i> {{ nombre_rol }}
+                    </span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="{% url 'logout' %}">
+                        <i class="fas fa-sign-out-alt"></i> Salir
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav> 

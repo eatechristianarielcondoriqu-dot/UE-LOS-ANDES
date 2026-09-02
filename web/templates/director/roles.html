@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Roles - UE Los Andes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/roles.css' %}">
+</head>
+
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="crud-container">
+        <div class="container-fluid">
+
+            <div class="crud-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-shield-alt"></i> Gestión de Roles</h1>
+                    <p class="text-muted">Panel administrativo para la configuración de perfiles de acceso y permisos
+                        del entorno educativo</p>
+                </div>
+                <button class="btn btn-add shadow-sm text-white" data-bs-toggle="modal" data-bs-target="#modalCreateRol"
+                    style="background-color: #1e3a8a;">
+                    <i class="fas fa-plus-circle me-1"></i> Insertar Nuevo Rol
+                </button>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="ref-card shadow-sm border-start border-primary border-4"
+                        style="background: white; padding: 20px; border-radius: 12px;">
+                        <span class="ref-label text-muted small d-block">Roles Definidos</span>
+                        <div class="ref-value fw-bold fs-3" style="color: #1e3a8a;">{{ total_roles }}</div>
+                    </div>
+                </div>
+            </div>
+
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'info' %}primary{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <div class="card data-card shadow-sm border-0" style="border-radius: 14px; overflow: hidden;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead style="background-color: #f1f5f9;">
+                            <tr>
+                                <th class="ps-4 text-secondary small fw-bold text-uppercase py-3" style="width: 20%;">ID
+                                    Registro</th>
+                                <th class="text-secondary small fw-bold text-uppercase py-3" style="width: 55%;">Nombre
+                                    Identificador del Rol</th>
+                                <th class="text-center text-secondary small fw-bold text-uppercase py-3"
+                                    style="width: 25%;">Acciones Avanzadas</th>
+                            </tr>
+                            
+                        </thead>
+                        <tbody>
+                            {% for r in roles %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-secondary">#{{ r.id_rol }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-initials me-3 d-flex align-items-center justify-content-center fw-bold"
+                                            style="width: 45px; height: 45px; border-radius: 50%; background: #dbeafe; color: #1e3a8a;">
+                                            {{ r.nombre_rol|slice:":2"|upper }}
+                                        </div>
+                                        <div>
+                                            <span class="badge text-white px-3 py-2"
+                                                style="background-color: #1e3a8a; font-size: 0.85rem; letter-spacing: 0.5px;">
+                                                {{ r.nombre_rol|upper }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group gap-2">
+                                        <button type="button" class="btn btn-action btn-edit" data-bs-toggle="modal"
+                                            data-bs-target="#modalEditRol" data-id="{{ r.id_rol }}"
+                                            data-nombre="{{ r.nombre_rol }}"
+                                            style="background: #dbeafe; color: #1e40af; border: none; padding: 8px 12px; border-radius: 6px;">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </button>
+                                        <button type="button" class="btn btn-action btn-delete" data-bs-toggle="modal"
+                                            data-bs-target="#modalDeleteRol" data-id="{{ r.id_rol }}"
+                                            data-nombre="{{ r.nombre_rol }}"
+                                            style="background: #fee2e2; color: #dc2626; border: none; padding: 8px 12px; border-radius: 6px;">
+                                            <i class="fas fa-trash-alt"></i> Eliminar
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-5 text-muted">
+                                    <i class="fas fa-folder-open display-4 mb-3 d-block text-secondary"></i>
+                                    No existen roles registrados en el catálogo del sistema.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCreateRol" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; border-radius: 12px;">
+                <div class="modal-header text-white" style="background-color: #1e3a8a;">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-shield-alt me-2"></i> Insertar Nuevo Rol</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'gestion_roles' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="crear_rol">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre del Rol</label>
+                            <input type="text" class="form-control" name="nombre_rol"
+                                placeholder="Ej: AUXILIAR, REGENTE, BIBLIOTECARIO" required
+                                style="text-transform: uppercase;">
+                            <div class="form-text">El sistema convertirá el nombre a mayúsculas de manera automática.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="background-color: #f8fafc;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn text-white px-4" style="background-color: #1e3a8a;">Guardar
+                            Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalEditRol" data-bs-backdrop="static" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; border-radius: 12px;">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> Editar Datos de Rol</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'gestion_roles' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="editar_rol">
+                    <input type="hidden" name="id_rol" id="edit_id_rol">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Nombre Modificado del Rol</label>
+                            <input type="text" class="form-control" name="nombre_rol" id="edit_nombre_rol" required
+                                style="text-transform: uppercase;">
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="background-color: #f8fafc;">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Descartar</button>
+                        <button type="submit" class="btn btn-dark px-4">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDeleteRol" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border: none; border-radius: 12px;">
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-exclamation-triangle text-danger display-4 mb-3"></i>
+                    <h4 class="fw-bold text-danger">¿Purgar Registro del Servidor?</h4>
+                    <p class="text-muted">Esta operación es irreversible. Eliminará físicamente el rol <b
+                            id="delete_nombre_rol" class="text-dark"></b> de la base de datos.</p>
+
+                    <form method="POST" action="{% url 'gestion_roles' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="eliminar_rol">
+                        <input type="hidden" name="id_rol" id="delete_id_rol">
+                        <div class="text-center bg-light p-2 mb-3 rounded border">
+                            <small class="text-danger fw-semibold"><i class="fas fa-info-circle"></i> Alerta: Se
+                                borrarán cuentas de usuario asociadas a este rol.</small>
+                        </div>
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger px-4 fw-bold">Sí, Eliminar de Raíz</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/roles.js' %}"></script>
+</body>
+
+</html>

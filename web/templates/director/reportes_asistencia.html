@@ -1,0 +1,430 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes de Asistencia - UE Los Andes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/reportes_asistencia.css' %}">
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+
+    <div class="main-container">
+        <div class="container-fluid">
+
+            <!-- PANEL DE USUARIO -->
+            <div class="user-panel-header mb-4">
+                <div class="user-info">
+                    <div class="avatar-circle">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="user-details">
+                        <h2>{{ nombre_completo }}</h2>
+                        <p class="role-badge">
+                            <i class="fas fa-shield-alt"></i> {{ rol_actual|upper }}
+                        </p>
+                    </div>
+                </div>
+                <div class="current-datetime">
+                    <p id="current-date"></p>
+                    <p id="current-time"></p>
+                </div>
+            </div>
+
+            <!-- HEADER -->
+            <div class="crud-header d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1><i class="fas fa-clipboard-list"></i> Reportes de Asistencia</h1>
+                    <p class="text-muted">Generador y administrador de registros de asistencia del sistema</p>
+                </div>
+                <button class="btn btn-add-record shadow-sm" data-bs-toggle="modal" data-bs-target="#modalCreateAsistencia">
+                    <i class="fas fa-plus-circle me-1"></i> Nuevo Registro
+                </button>
+            </div>
+
+            <!-- TARJETAS DE ESTADÍSTICAS -->
+            <div class="row mb-4">
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card blue">
+                        <div class="stat-icon"><i class="fas fa-list"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number">{{ stats.total_registros }}</div>
+                            <div class="stat-label">Total de Registros</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card green">
+                        <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number">{{ stats.presentes }}</div>
+                            <div class="stat-label">Presentes</div>
+                            <div class="stat-percentage">{{ stats.pct_presentes }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card red">
+                        <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number">{{ stats.faltas }}</div>
+                            <div class="stat-label">Faltas</div>
+                            <div class="stat-percentage">{{ stats.pct_faltas }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <div class="stat-card orange">
+                        <div class="stat-icon"><i class="fas fa-exclamation-circle"></i></div>
+                        <div class="stat-content">
+                            <div class="stat-number">{{ stats.licencias }}</div>
+                            <div class="stat-label">Licencias</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ESTADÍSTICAS SECUNDARIAS -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="info-box">
+                        <div class="info-box-icon bg-info">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Estudiantes Únicos</span>
+                            <span class="info-box-number">{{ stats.estudiantes_unicos }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="info-box">
+                        <div class="info-box-icon bg-warning">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Atrasos</span>
+                            <span class="info-box-number">{{ stats.atrasos }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="info-box">
+                        <div class="info-box-icon bg-success">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="info-box-content">
+                            <span class="info-box-text">Registros Hoy</span>
+                            <span class="info-box-number">{{ stats.registros_hoy }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAJA DE BÚSQUEDA Y FILTROS -->
+            <div class="card p-3 mb-4 shadow-sm search-box-card">
+                <form method="GET" action="{% url 'reportes_asistencia' %}">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                                <input type="text" class="form-control border-start-0" name="search"
+                                    value="{{ search_query }}"
+                                    placeholder="Buscar estudiante, materia o RUDE...">
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select class="form-select" name="estudiante">
+                                <option value="">Todos los estudiantes</option>
+                                {% for estudiante in estudiantes %}
+                                <option value="{{ estudiante.id_student }}" {% if filtro_estudiante == estudiante.id_student|stringformat:"s" %}selected{% endif %}>
+                                    {{ estudiante.id_persona.nombres }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select class="form-select" name="materia">
+                                <option value="">Todas las materias</option>
+                                {% for materia in materias %}
+                                <option value="{{ materia.id_materia }}" {% if filtro_materia == materia.id_materia|stringformat:"s" %}selected{% endif %}>
+                                    {{ materia.nombre_materia }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <select class="form-select" name="estado">
+                                <option value="">Todos los estados</option>
+                                {% for codigo, label in estados %}
+                                <option value="{{ codigo }}" {% if filtro_estado == codigo %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-search w-100 fw-bold">
+                                <i class="fas fa-search"></i> Filtrar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Filtros de fecha (opcional) -->
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-3">
+                            <label class="form-label small">Desde</label>
+                            <input type="date" class="form-control" name="fecha_inicio" value="{{ filtro_fecha_inicio }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small">Hasta</label>
+                            <input type="date" class="form-control" name="fecha_fin" value="{{ filtro_fecha_fin }}">
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end gap-2">
+                            {% if search_query or filtro_estudiante or filtro_estado %}
+                            <a href="{% url 'reportes_asistencia' %}" class="btn btn-outline-secondary flex-grow-1">
+                                <i class="fas fa-sync-alt"></i> Limpiar Filtros
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- MENSAJES DE FEEDBACK -->
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'info' %}primary{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm"
+                role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            <!-- TABLA DE ASISTENCIAS -->
+            <div class="card data-card shadow-sm">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Estudiante</th>
+                                <th>RUDE</th>
+                                <th>Materia</th>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th class="text-center">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for asistencia in asistencias %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-initials me-3">
+                                            {{ asistencia.id_estudiante.id_persona.nombres|slice:":1" }}{{ asistencia.id_estudiante.id_persona.apellidos|slice:":1" }}
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 text-dark fw-bold">
+                                                {{ asistencia.id_estudiante.id_persona.nombres }} {{ asistencia.id_estudiante.id_persona.apellidos }}
+                                            </h6>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <code class="rude-code">{{ asistencia.id_estudiante.codigo_rude }}</code>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ asistencia.id_materia.nombre_materia }}</span>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ asistencia.fecha|date:"d/m/Y" }}</small>
+                                </td>
+                                <td>
+                                    <span class="badge estado-badge estado-{{ asistencia.estado|lower }}">
+                                        <i class="fas {% if asistencia.estado == 'PRESENTE' %}fa-check-circle{% elif asistencia.estado == 'FALTA' %}fa-times-circle{% elif asistencia.estado == 'LICENCIA' %}fa-file-alt{% else %}fa-exclamation-circle{% endif %}"></i>
+                                        {{ asistencia.estado }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group gap-2">
+                                        <button type="button" class="btn btn-action btn-edit" data-bs-toggle="modal"
+                                            data-bs-target="#modalEditAsistencia" data-id="{{ asistencia.id_asistencia }}"
+                                            data-estado="{{ asistencia.estado }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-action btn-hard-delete" data-bs-toggle="modal"
+                                            data-bs-target="#modalDeleteAsistencia" data-id="{{ asistencia.id_asistencia }}">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center py-5 text-muted">
+                                    <i class="fas fa-search-minus display-4 mb-3 d-block text-secondary"></i>
+                                    No se encontraron registros de asistencia que coincidan con tu búsqueda.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ÚLTIMOS REGISTROS (Sidebar Opcional) -->
+            {% if ultimos_registros %}
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-light">
+                            <h5 class="mb-0"><i class="fas fa-history"></i> Últimos 10 Registros</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                {% for registro in ultimos_registros %}
+                                <div class="timeline-item">
+                                    <div class="timeline-badge estado-{{ registro.estado|lower }}">
+                                        <i class="fas {% if registro.estado == 'PRESENTE' %}fa-check{% elif registro.estado == 'FALTA' %}fa-times{% elif registro.estado == 'LICENCIA' %}fa-file{% else %}fa-exclamation{% endif %}"></i>
+                                    </div>
+                                    <div class="timeline-content">
+                                        <h6 class="mb-0">{{ registro.id_estudiante.id_persona.nombres }} - {{ registro.id_materia.nombre_materia }}</h6>
+                                        <small class="text-muted">{{ registro.fecha|date:"d/m/Y" }} - {{ registro.estado }}</small>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Modal: Crear Asistencia -->
+    <div class="modal fade" id="modalCreateAsistencia" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-plus-circle me-2"></i> Nuevo Registro de Asistencia</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'reportes_asistencia' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Estudiante</label>
+                            <select class="form-select" name="id_estudiante" required>
+                                <option value="" disabled selected>-- Seleccione Estudiante --</option>
+                                {% for estudiante in estudiantes %}
+                                <option value="{{ estudiante.id_student }}">
+                                    {{ estudiante.id_persona.nombres }} {{ estudiante.id_persona.apellidos }} ({{ estudiante.codigo_rude }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Materia</label>
+                            <select class="form-select" name="id_materia" required>
+                                <option value="" disabled selected>-- Seleccione Materia --</option>
+                                {% for materia in materias %}
+                                <option value="{{ materia.id_materia }}">{{ materia.nombre_materia }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Fecha</label>
+                            <input type="date" class="form-control" name="fecha" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Estado</label>
+                            <select class="form-select" name="estado" required>
+                                <option value="" disabled selected>-- Seleccione Estado --</option>
+                                <option value="PRESENTE">Presente</option>
+                                <option value="FALTA">Falta</option>
+                                <option value="LICENCIA">Licencia</option>
+                                <option value="ATRASO">Atraso</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">Crear Registro</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Editar Asistencia -->
+    <div class="modal fade" id="modalEditAsistencia" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-edit me-2"></i> Actualizar Estado</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{% url 'reportes_asistencia' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="id_asistencia" id="edit_id_asistencia">
+                    <div class="modal-body">
+                        <label class="form-label fw-semibold">Nuevo Estado</label>
+                        <select class="form-select" name="estado" id="edit_estado" required>
+                            <option value="PRESENTE">Presente</option>
+                            <option value="FALTA">Falta</option>
+                            <option value="LICENCIA">Licencia</option>
+                            <option value="ATRASO">Atraso</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-dark px-4">Actualizar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Eliminar Asistencia -->
+    <div class="modal fade" id="modalDeleteAsistencia" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center py-4">
+                    <i class="fas fa-exclamation-triangle text-danger display-4 mb-3"></i>
+                    <h4 class="fw-bold text-danger">¿Eliminar este Registro?</h4>
+                    <p class="text-muted">Se eliminará permanentemente de la base de datos.</p>
+                    <form method="POST" action="{% url 'reportes_asistencia' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" name="id_asistencia" id="delete_id_asistencia">
+                        <div class="d-flex gap-2 justify-content-center mt-4">
+                            <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-danger px-4 fw-bold">Sí, Eliminar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/reportes_asistencia.js' %}"></script>
+</body>
+</html>
